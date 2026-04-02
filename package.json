@@ -1,0 +1,95 @@
+{
+	"name": "@minimalstuff/tooling",
+	"version": "0.0.1",
+	"description": "Shared tooling configs: EditorConfig, OXC (oxlint + oxfmt), release-it",
+	"keywords": [
+		"conventionalcommits",
+		"editorconfig",
+		"oxc",
+		"oxfmt",
+		"oxlint",
+		"release-it"
+	],
+	"license": "MIT",
+	"author": "Minimalstuff",
+	"bin": {
+		"minimalstuff-tooling": "./dist/cli/index.js"
+	},
+	"files": [
+		"dist",
+		"preset",
+		"README.md"
+	],
+	"type": "module",
+	"exports": {
+		"./editorconfig": "./preset/.editorconfig",
+		"./oxc/lint": {
+			"types": "./dist/oxc/lint.d.ts",
+			"import": "./dist/oxc/lint.js"
+		},
+		"./oxc/fmt": {
+			"types": "./dist/oxc/fmt.d.ts",
+			"import": "./dist/oxc/fmt.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"lint": "pnpm run build && oxlint",
+		"lint:fix": "pnpm run build && oxlint --fix",
+		"format": "pnpm run build && oxfmt --write .",
+		"prepublishOnly": "pnpm run build",
+		"release": "pnpm run build && release-it --ci",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@adonisjs/eslint-plugin": "^2.2.1",
+		"@antfu/install-pkg": "^1.1.0",
+		"@clack/prompts": "^1.0.1",
+		"eslint-plugin-perfectionist": "^5.5.0",
+		"picocolors": "^1.1.1"
+	},
+	"devDependencies": {
+		"@release-it/conventional-changelog": "^10.0.6",
+		"@types/node": "^25.2.3",
+		"oxfmt": "^0.40.0",
+		"oxlint": "^1.55.0",
+		"release-it": "^19.2.4",
+		"typescript": "^5.9.3"
+	},
+	"peerDependencies": {
+		"oxfmt": ">=0.40.0",
+		"oxlint": ">=1.55.0"
+	},
+	"peerDependenciesMeta": {
+		"oxfmt": {
+			"optional": true
+		},
+		"oxlint": {
+			"optional": true
+		}
+	},
+	"release-it": {
+		"git": {
+			"requireCleanWorkingDir": true,
+			"requireUpstream": true,
+			"commitMessage": "chore(release): ${version}",
+			"tagAnnotation": "v${version}",
+			"push": true,
+			"tagName": "v${version}"
+		},
+		"github": {
+			"release": true
+		},
+		"npm": {
+			"publish": true,
+			"skipChecks": true
+		},
+		"plugins": {
+			"@release-it/conventional-changelog": {
+				"preset": {
+					"name": "conventionalcommits"
+				}
+			}
+		}
+	}
+}
