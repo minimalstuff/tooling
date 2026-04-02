@@ -1,71 +1,72 @@
 #!/usr/bin/env node
 
-import color from 'picocolors'
+import color from 'picocolors';
 import {
-	intro,
-	log,
-	confirm,
-	multiselect,
-	isCancel,
 	cancel,
-} from '@clack/prompts'
+	confirm,
+	intro,
+	isCancel,
+	log,
+	multiselect,
+} from '@clack/prompts';
 
-import {updateEditorConfig} from './update_editorconfig.js'
-import {updateOxc} from './update_oxc.js'
-import {updatePkgJson} from './update_pkg_json.js'
-import {TOOLING_PACKAGE_NAME} from '../constants.js'
-import {updateReleaseIt} from './update_release_it.js'
+import { updateOxc } from './update_oxc.js';
+import { updatePkgJson } from './update_pkg.json.js';
+import { updateTsconfig } from './update_tsconfig.js';
+import { TOOLING_PACKAGE_NAME } from '../constants.js';
+import { updateEditorConfig } from './update_editorconfig.js';
 
-export type ConfigTool = 'editorconfig' | 'oxc' | 'release-it'
+export type ConfigTool = 'editorconfig' | 'tsconfig' | 'oxc';
 
 export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
 	'editorconfig',
+	'tsconfig',
 	'oxc',
-	'release-it',
-]
+];
 
 export interface PromptResult {
-	tools: ConfigTool[]
+	tools: ConfigTool[];
 }
 
 function exit() {
-	cancel('Cancelled')
-	process.exit(0)
+	cancel('Cancelled');
+	return process.exit(0);
 }
 
 async function main() {
-	const cwd = process.cwd()
+	const cwd = process.cwd();
 
-	intro(color.blue(TOOLING_PACKAGE_NAME))
+	intro(color.blue(TOOLING_PACKAGE_NAME));
 
 	log.info(
-		`You are about to configure ${TOOLING_PACKAGE_NAME} in the current directory: ${color.green(cwd)}`,
-	)
+		`You are about to configure ${TOOLING_PACKAGE_NAME} in the current directory: ${color.green(
+			cwd,
+		)}`,
+	);
 
-	const shouldContinue = await confirm({message: 'Continue ?'})
-	if (isCancel(shouldContinue)) return exit()
+	const shouldContinue = await confirm({ message: `Continue ?` });
+	if (isCancel(shouldContinue)) return exit();
 
 	const tools = await multiselect<ConfigTool>({
 		message: 'Select tools to configure',
 		options: [
-			{value: 'editorconfig', label: 'EditorConfig'},
-			{value: 'oxc', label: 'OXC (oxlint + oxfmt)'},
-			{value: 'release-it', label: 'release-it (Conventional Changelog)'},
+			{ value: 'editorconfig', label: 'EditorConfig' },
+			{ value: 'tsconfig', label: 'TypeScript' },
+			{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
 		],
 		initialValues: DEFAULT_SELECTED_TOOLS,
 		required: true,
-	})
+	});
+	if (isCancel(tools)) return exit();
 
-	if (isCancel(tools)) return exit()
-
-	await updatePkgJson({tools})
-	await updateEditorConfig({tools})
-	await updateOxc({tools})
-	await updateReleaseIt({tools})
+	await updatePkgJson({ tools });
+	await updateEditorConfig({ tools });
+	await updateTsconfig({ tools });
+	await updateOxc({ tools });
 
 	log.success(
 		'All done. Make sure to install the dependencies with `pnpm install`.',
-	)
+	);
 }
 
-void main()
+void main();

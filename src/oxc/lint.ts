@@ -1,11 +1,10 @@
-import {defineConfig} from 'oxlint'
-import type {OxlintConfig} from 'oxlint'
+import { type OxlintConfig, defineConfig } from 'oxlint';
 
-import {IGNORE_PATTERNS} from './shared.js'
+import { IGNORE_PATTERNS } from './shared.ts';
 
-interface MinimalstuffOxlintConfig {
-	adonisjs?: boolean
-	perfectionist?: boolean
+interface JulrOxlintConfig {
+	adonisjs?: boolean;
+	perfectionist?: boolean;
 }
 
 function adonisjsPreset() {
@@ -15,6 +14,10 @@ function adonisjsPreset() {
 			'@adonisjs/prefer-lazy-controller-import': 'error',
 			'@adonisjs/prefer-lazy-listener-import': 'error',
 			'typescript/triple-slash-reference': 'off',
+
+			/**
+			 * Knex query builder return a promise but safe to ignore since they are not executed until you call `.exec()` or similar method.
+			 */
 			'@typescript-eslint/no-floating-promises': [
 				'error',
 				{
@@ -37,12 +40,12 @@ function adonisjsPreset() {
 								'ManyToManySubQueryBuilderContract',
 							],
 						},
-						{from: 'package', package: 'knex', name: 'QueryBuilder'},
+						{ from: 'package', package: 'knex', name: 'QueryBuilder' },
 					],
 				},
 			],
 		},
-	})
+	});
 }
 
 function perfectionistPreset() {
@@ -71,7 +74,7 @@ function perfectionistPreset() {
 				},
 			],
 		},
-	})
+	});
 }
 
 function defaultPreset() {
@@ -79,10 +82,10 @@ function defaultPreset() {
 		ignorePatterns: IGNORE_PATTERNS,
 		plugins: ['typescript', 'node', 'eslint', 'oxc', 'react', 'react-perf'],
 		rules: {},
-	})
+	});
 }
 
-export function minimalstuffPreset(config: MinimalstuffOxlintConfig = {}) {
+export function minimalstuffPreset(config: JulrOxlintConfig = {}) {
 	return defineConfig({
 		extends: [
 			defaultPreset(),
@@ -90,7 +93,5 @@ export function minimalstuffPreset(config: MinimalstuffOxlintConfig = {}) {
 			config.perfectionist ? perfectionistPreset() : null,
 		].filter(Boolean) as OxlintConfig[],
 		rules: {},
-	})
+	});
 }
-
-export const julrPreset = minimalstuffPreset

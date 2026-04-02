@@ -1,70 +1,122 @@
-# Minimalstuff Tooling
+## Features
 
-Shared tooling configs: EditorConfig, OXC (`oxlint` + `oxfmt`), and `release-it` with Conventional Changelog.
+- Shared presets for [OXC](https://oxc.rs/) tools (oxlint + oxfmt)
+- TypeScript configuration presets
+- CLI for quick project setup
 
-## EditorConfig
+## Usage
 
-Canonical file: `preset/.editorconfig` (published as `@minimalstuff/tooling/editorconfig`).
+> [!IMPORTANT]
+> New/updated rules will not be considered as breaking changes. Only API changes will be considered as breaking changes.
 
-After `pnpm add -D @minimalstuff/tooling`:
+### CLI installation
 
-```bash
-cp node_modules/@minimalstuff/tooling/preset/.editorconfig .editorconfig
-```
-
-Or run `pnpm dlx @minimalstuff/tooling` (after the package is **published** to npm) or `pnpm exec minimalstuff-tooling` when it is installed as a dev dependency.
-
-### Before publishing: `pnpm dlx` and npm 404
-
-`pnpm dlx @minimalstuff/tooling` always fetches from the **npm registry**. Until you publish the scope, it will return **404**.
-
-Use one of these instead:
+Just run this command in your project root directory:
 
 ```bash
-pnpm add -D file:/absolute/path/to/minimalstuff-tooling
-pnpm exec minimalstuff-tooling
+pnpm dlx @minimalstuff/tooling@latest
 ```
 
-Or from anywhere, point `dlx` at the local folder (path must contain a `package.json`):
+### Manual install
 
 ```bash
-pnpm dlx /absolute/path/to/minimalstuff-tooling
+pnpm add -D oxlint oxfmt @minimalstuff/tooling
 ```
 
-Or pack once and run the tarball:
+### OXC (oxlint + oxfmt)
 
-```bash
-cd /path/to/minimalstuff-tooling && pnpm pack
-pnpm dlx /path/to/minimalstuff-tooling/minimalstuff-tooling-0.0.1.tgz
-```
+#### oxlint
 
-## OXC (oxlint + oxfmt)
-
-### `oxlint.config.js`
-
-```js
-import {defineConfig} from 'oxlint'
-import {minimalstuffPreset} from '@minimalstuff/tooling/oxc/lint'
+```ts
+// oxlint.config.ts
+import { defineConfig } from 'oxlint';
+import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';
 
 export default defineConfig({
 	extends: [minimalstuffPreset()],
-})
+});
 ```
 
-### `oxfmt.config.js`
+Options:
 
-```js
-import {minimalstuffPreset} from '@minimalstuff/tooling/oxc/fmt'
+| Option          | Type      | Default | Description                             |
+| --------------- | --------- | ------- | --------------------------------------- |
+| `adonisjs`      | `boolean` | `false` | Enable AdonisJS-specific rules          |
+| `perfectionist` | `boolean` | `false` | Enable import sorting via perfectionist |
 
-export default minimalstuffPreset()
+```ts
+export default defineConfig({
+	extends: [minimalstuffPreset({ adonisjs: true, perfectionist: true })],
+});
 ```
 
-## `release-it` (Conventional Changelog)
+#### oxfmt
 
-This package configures `release-it` with the `conventionalcommits` preset.
+```ts
+// oxfmt.config.ts
+import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/fmt';
 
-## Build and publish
+export default minimalstuffPreset();
+```
 
-The published package is **compiled JavaScript** in `dist/` (Node cannot run the published `bin` as raw TypeScript). `npm publish` runs `prepublishOnly`, which executes `pnpm run build`.
+You can override any option:
 
-Maintainers: `pnpm lint` and `pnpm format` run a build first so local `oxlint.config.ts` / `oxfmt.config.ts` can import `./dist/oxc/*.js`. For a quick check on source only: `pnpm typecheck`.
+```ts
+export default minimalstuffPreset({ printWidth: 120, semi: true });
+```
+
+Defaults: `printWidth: 100`, `semi: false`, `singleQuote: true`, `trailingComma: 'all'`, `arrowParens: 'avoid'`.
+
+#### Scripts
+
+```json
+{
+	"scripts": {
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"format": "oxfmt --write ."
+	}
+}
+```
+
+### Tsconfig
+
+Node (ESM):
+
+```json
+{
+	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node",
+	"compilerOptions": {
+		"rootDir": "./",
+		"outDir": "./build"
+	}
+}
+```
+
+Node Next (ESM + `ts` extensions):
+
+```json
+{
+	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node-next",
+	"compilerOptions": {
+		"rootDir": "./",
+		"outDir": "./build"
+	}
+}
+```
+
+Vue:
+
+```json
+{
+	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.vue",
+	"compilerOptions": {
+		"rootDir": "./",
+		"outDir": "./build"
+	}
+}
+```
+
+---
+
+> source: https://github.com/Julien-R44/tooling

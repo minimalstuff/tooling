@@ -5,4 +5,4 @@ export const IGNORE_PATTERNS = [
 	'dist/**',
 	'build/**',
 	'*.yml',
-]
+];

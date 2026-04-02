@@ -1,3 +1,3 @@
-import {minimalstuffPreset} from './dist/oxc/fmt.js'
+import { minimalstuffPreset } from './src/oxc/fmt.ts';
 
-export default minimalstuffPreset()
+export default minimalstuffPreset();

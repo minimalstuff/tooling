@@ -1,45 +1,43 @@
 {
 	"name": "@minimalstuff/tooling",
 	"version": "0.0.1",
-	"description": "Shared tooling configs: EditorConfig, OXC (oxlint + oxfmt), release-it",
+	"description": "Shared tooling configs: EditorConfig, TSConfig, OXC (oxlint + oxfmt)",
 	"keywords": [
-		"conventionalcommits",
 		"editorconfig",
 		"oxc",
 		"oxfmt",
 		"oxlint",
-		"release-it"
+		"tsconfig"
 	],
 	"license": "MIT",
-	"author": "Minimalstuff",
-	"bin": {
-		"minimalstuff-tooling": "./dist/cli/index.js"
+	"author": "Sonny93 <sonnyasdev@gmail.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/minimalstuff/tooling"
 	},
+	"bin": "./dist/cli/index.mjs",
 	"files": [
 		"dist",
-		"preset",
-		"README.md"
+		"preset"
 	],
 	"type": "module",
 	"exports": {
 		"./editorconfig": "./preset/.editorconfig",
-		"./oxc/lint": {
-			"types": "./dist/oxc/lint.d.ts",
-			"import": "./dist/oxc/lint.js"
-		},
-		"./oxc/fmt": {
-			"types": "./dist/oxc/fmt.d.ts",
-			"import": "./dist/oxc/fmt.js"
-		}
+		"./tsconfigs/*": "./dist/tsconfigs/*.json",
+		"./oxc/lint": "./dist/oxc/lint.mjs",
+		"./oxc/fmt": "./dist/oxc/fmt.mjs"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
-		"lint": "pnpm run build && oxlint",
-		"lint:fix": "pnpm run build && oxlint --fix",
-		"format": "pnpm run build && oxfmt --write .",
-		"prepublishOnly": "pnpm run build",
-		"release": "pnpm run build && release-it --ci",
-		"typecheck": "tsc --noEmit"
+		"lint": "oxlint",
+		"format": "oxfmt --write .",
+		"build": "tsdown",
+		"release": "pnpm build && release-it --ci",
+		"typecheck": "tsc --noEmit",
+		"checks": "pnpm typecheck && pnpm lint"
 	},
 	"dependencies": {
 		"@adonisjs/eslint-plugin": "^2.2.1",
@@ -54,6 +52,7 @@
 		"oxfmt": "^0.40.0",
 		"oxlint": "^1.55.0",
 		"release-it": "^19.2.4",
+		"tsdown": "^0.21.3",
 		"typescript": "^5.9.3"
 	},
 	"peerDependencies": {
@@ -68,6 +67,7 @@
 			"optional": true
 		}
 	},
+	"packageManager": "pnpm@10.29.3",
 	"release-it": {
 		"git": {
 			"requireCleanWorkingDir": true,
@@ -86,6 +86,7 @@
 		},
 		"plugins": {
 			"@release-it/conventional-changelog": {
+				"infile": "CHANGELOG.md",
 				"preset": {
 					"name": "conventionalcommits"
 				}

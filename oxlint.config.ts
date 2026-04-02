@@ -1,6 +1,7 @@
-import {defineConfig} from 'oxlint'
-import {minimalstuffPreset} from './dist/oxc/lint.js'
+import { defineConfig } from 'oxlint';
+
+import { minimalstuffPreset } from './src/oxc/lint.ts';
 
 export default defineConfig({
-	extends: [minimalstuffPreset()],
-})
+	extends: [minimalstuffPreset({ perfectionist: true })],
+});
