@@ -33,7 +33,7 @@ import { defineConfig } from "oxlint";
 import { minimalstuffPreset } from "@minimalstuff/tooling/oxc/lint";
 
 export default defineConfig({
-	extends: [minimalstuffPreset()],
+  extends: [minimalstuffPreset()],
 });
 ```
 
@@ -47,9 +47,9 @@ Options:
 
 ```ts
 export default defineConfig({
-	extends: [
-		minimalstuffPreset({ react: true, adonisjs: true, perfectionist: true }),
-	],
+  extends: [
+    minimalstuffPreset({ react: true, adonisjs: true, perfectionist: true }),
+  ],
 });
 ```
 
@@ -74,11 +74,11 @@ Defaults: `printWidth: 100`, `semi: false`, `singleQuote: true`, `trailingComma:
 
 ```json
 {
-	"scripts": {
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix",
-		"format": "oxfmt --write ."
-	}
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt --write ."
+  }
 }
 ```
 
@@ -88,11 +88,11 @@ Node (ESM):
 
 ```json
 {
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
+  "extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build"
+  }
 }
 ```
 
@@ -100,11 +100,11 @@ Node Next (ESM + `ts` extensions):
 
 ```json
 {
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node-next",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
+  "extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node-next",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build"
+  }
 }
 ```
 
@@ -112,11 +112,11 @@ React (TSX, bundler resolution):
 
 ```json
 {
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.react",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
+  "extends": "@minimalstuff/tooling/tsconfigs/tsconfig.react",
+  "compilerOptions": {
+    "rootDir": "./",
+    "outDir": "./build"
+  }
 }
 ```
 
