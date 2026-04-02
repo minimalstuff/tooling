@@ -29,8 +29,8 @@ pnpm add -D oxlint oxfmt @minimalstuff/tooling
 
 ```ts
 // oxlint.config.ts
-import { defineConfig } from 'oxlint';
-import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';
+import { defineConfig } from "oxlint";
+import { minimalstuffPreset } from "@minimalstuff/tooling/oxc/lint";
 
 export default defineConfig({
 	extends: [minimalstuffPreset()],
@@ -57,7 +57,7 @@ export default defineConfig({
 
 ```ts
 // oxfmt.config.ts
-import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/fmt';
+import { minimalstuffPreset } from "@minimalstuff/tooling/oxc/fmt";
 
 export default minimalstuffPreset();
 ```
@@ -119,6 +119,14 @@ React (TSX, bundler resolution):
 	}
 }
 ```
+
+### Prerequisites
+
+1. **NPM token**
+   Create an automation token at [npmjs.com/access-tokens](https://www.npmjs.com/access-tokens) (scope: package publish for `@minimalstuff/ui`).
+
+2. **Repository secret**
+   In the repo: **Settings → Secrets and variables → Actions**. Add a secret named `NPM_TOKEN` with the token value.
 
 ---
 
