@@ -1,6 +1,6 @@
 {
 	"name": "@minimalstuff/tooling",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "Shared tooling configs: EditorConfig, TSConfig, OXC (oxlint + oxfmt)",
 	"keywords": [
 		"editorconfig",
