@@ -2,9 +2,17 @@ import { type OxlintConfig, defineConfig } from 'oxlint';
 
 import { IGNORE_PATTERNS } from './shared.ts';
 
-interface JulrOxlintConfig {
+interface MinimalstuffOxlintConfig {
 	adonisjs?: boolean;
 	perfectionist?: boolean;
+	react?: boolean;
+}
+
+function reactPreset() {
+	return defineConfig({
+		plugins: ['react', 'react-perf'],
+		rules: {},
+	});
 }
 
 function adonisjsPreset() {
@@ -14,10 +22,6 @@ function adonisjsPreset() {
 			'@adonisjs/prefer-lazy-controller-import': 'error',
 			'@adonisjs/prefer-lazy-listener-import': 'error',
 			'typescript/triple-slash-reference': 'off',
-
-			/**
-			 * Knex query builder return a promise but safe to ignore since they are not executed until you call `.exec()` or similar method.
-			 */
 			'@typescript-eslint/no-floating-promises': [
 				'error',
 				{
@@ -80,15 +84,16 @@ function perfectionistPreset() {
 function defaultPreset() {
 	return defineConfig({
 		ignorePatterns: IGNORE_PATTERNS,
-		plugins: ['typescript', 'node', 'eslint', 'oxc', 'react', 'react-perf'],
+		plugins: ['typescript', 'node', 'eslint', 'oxc'],
 		rules: {},
 	});
 }
 
-export function minimalstuffPreset(config: JulrOxlintConfig = {}) {
+export function minimalstuffPreset(config: MinimalstuffOxlintConfig = {}) {
 	return defineConfig({
 		extends: [
 			defaultPreset(),
+			config.react ? reactPreset() : null,
 			config.adonisjs ? adonisjsPreset() : null,
 			config.perfectionist ? perfectionistPreset() : null,
 		].filter(Boolean) as OxlintConfig[],

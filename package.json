@@ -7,6 +7,7 @@
 		"oxc",
 		"oxfmt",
 		"oxlint",
+		"react",
 		"tsconfig"
 	],
 	"license": "MIT",

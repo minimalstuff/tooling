@@ -3,9 +3,8 @@
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
 		"target": "ESNext",
-		"jsx": "preserve",
-		"jsxImportSource": "vue",
-		"lib": ["DOM", "ESNext", "DOM.Iterable", "ES2020"],
+		"lib": ["DOM", "DOM.Iterable", "ESNext", "ES2020"],
+		"jsx": "react-jsx",
 		"useDefineForClassFields": true,
 		"module": "NodeNext",
 		"moduleResolution": "Bundler",

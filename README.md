@@ -41,12 +41,15 @@ Options:
 
 | Option          | Type      | Default | Description                             |
 | --------------- | --------- | ------- | --------------------------------------- |
+| `react`         | `boolean` | `false` | Enable React-specific oxlint plugins    |
 | `adonisjs`      | `boolean` | `false` | Enable AdonisJS-specific rules          |
 | `perfectionist` | `boolean` | `false` | Enable import sorting via perfectionist |
 
 ```ts
 export default defineConfig({
-	extends: [minimalstuffPreset({ adonisjs: true, perfectionist: true })],
+	extends: [
+		minimalstuffPreset({ react: true, adonisjs: true, perfectionist: true }),
+	],
 });
 ```
 
@@ -105,11 +108,11 @@ Node Next (ESM + `ts` extensions):
 }
 ```
 
-Vue:
+React (TSX, bundler resolution):
 
 ```json
 {
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.vue",
+	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.react",
 	"compilerOptions": {
 		"rootDir": "./",
 		"outDir": "./build"
