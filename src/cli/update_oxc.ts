@@ -32,11 +32,16 @@ const vscodeSettings = {
 
 const oxcScripts = {
 	format: 'oxfmt --write .',
-	lint: 'oxlint',
-	'lint:fix': 'oxlint --fix',
+	lint: 'oxlint --type-aware',
+	'lint:fix': 'oxlint --type-aware --fix',
 };
 
-const oxcPackages = ['oxfmt', 'oxlint', TOOLING_PACKAGE_NAME];
+const oxcPackages = [
+	'oxfmt',
+	'oxlint',
+	'oxlint-tsgolint',
+	TOOLING_PACKAGE_NAME,
+];
 
 export async function updateOxc(result: PromptResult) {
 	if (!result.tools.includes('oxc')) return;
@@ -62,7 +67,7 @@ async function updateVscodeSettings(cwd: string) {
 	let settings: Record<string, unknown> = {};
 	if (existsSync(settingsPath)) {
 		const content = await readFile(settingsPath, 'utf-8');
-		settings = JSON.parse(content);
+		settings = JSON.parse(content) as Record<string, unknown>;
 	}
 
 	for (const [key, value] of Object.entries(vscodeSettings)) {
@@ -72,9 +77,15 @@ async function updateVscodeSettings(cwd: string) {
 	await writeFile(settingsPath, JSON.stringify(settings, null, 2));
 }
 
+type PackageJsonForScripts = {
+	scripts?: Record<string, string>;
+	[key: string]: unknown;
+};
+
 async function addScriptsToPackageJson(cwd: string) {
 	const pkgPath = join(cwd, 'package.json');
-	const pkg = JSON.parse(await readFile(pkgPath, 'utf-8'));
+	const raw = await readFile(pkgPath, 'utf-8');
+	const pkg = JSON.parse(raw) as PackageJsonForScripts;
 
 	pkg.scripts ??= {};
 	for (const [key, value] of Object.entries(oxcScripts))

@@ -1,6 +1,30 @@
-import { type OxlintConfig, defineConfig } from 'oxlint';
+import { type DummyRuleMap, type OxlintConfig, defineConfig } from 'oxlint';
 
 import { IGNORE_PATTERNS } from './shared.ts';
+
+const STRICT_TYPE_AWARE_RULES = {
+	'typescript/await-thenable': 'error',
+	'typescript/no-floating-promises': 'error',
+	'typescript/no-misused-promises': 'error',
+	'typescript/no-unnecessary-condition': 'error',
+	'typescript/no-unnecessary-type-assertion': 'error',
+	'typescript/no-unsafe-argument': 'error',
+	'typescript/no-unsafe-assignment': 'error',
+	'typescript/no-unsafe-call': 'error',
+	'typescript/no-unsafe-member-access': 'error',
+	'typescript/no-unsafe-return': 'error',
+	'typescript/prefer-nullish-coalescing': 'error',
+	'typescript/prefer-optional-chain': 'error',
+	'typescript/strict-boolean-expressions': [
+		'error',
+		{
+			allowNullableBoolean: true,
+			allowNullableObject: true,
+			allowNullableString: true,
+		},
+	],
+	'typescript/switch-exhaustiveness-check': 'error',
+};
 
 interface MinimalstuffOxlintConfig {
 	adonisjs?: boolean;
@@ -85,9 +109,10 @@ function defaultPreset() {
 	return defineConfig({
 		ignorePatterns: IGNORE_PATTERNS,
 		plugins: ['typescript', 'node', 'eslint', 'oxc'],
-		rules: {},
+		rules: { ...STRICT_TYPE_AWARE_RULES } as DummyRuleMap,
 		options: {
 			typeAware: true,
+			typeCheck: true,
 		},
 	});
 }

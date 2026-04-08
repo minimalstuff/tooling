@@ -31,9 +31,9 @@
 		"provenance": true
 	},
 	"scripts": {
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix",
-		"format": "oxfmt --write . && oxlint --fix",
+		"lint": "oxlint --type-aware",
+		"lint:fix": "oxlint --type-aware --fix",
+		"format": "oxfmt --write . && oxlint --type-aware --fix",
 		"build": "tsdown",
 		"release": "release-it",
 		"typecheck": "tsc --noEmit",
@@ -58,13 +58,17 @@
 	},
 	"peerDependencies": {
 		"oxfmt": ">=0.40.0",
-		"oxlint": ">=1.55.0"
+		"oxlint": ">=1.55.0",
+		"oxlint-tsgolint": ">=0.20.0"
 	},
 	"peerDependenciesMeta": {
 		"oxfmt": {
 			"optional": true
 		},
 		"oxlint": {
+			"optional": true
+		},
+		"oxlint-tsgolint": {
 			"optional": true
 		}
 	},

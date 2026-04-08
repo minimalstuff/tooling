@@ -6,10 +6,16 @@ import type { PromptResult } from './index.js';
 import { TOOLING_PACKAGE_NAME } from '../constants.js';
 import pkgJson from '../../package.json' with { type: 'json' };
 
+type UserPackageJson = {
+	devDependencies?: Record<string, string>;
+	[key: string]: unknown;
+};
+
 export async function updatePkgJson(_: PromptResult) {
 	const cwd = process.cwd();
 	const pathPackageJSON = join(cwd, 'package.json');
-	const userPkgJson = JSON.parse(await readFile(pathPackageJSON, 'utf-8'));
+	const raw = await readFile(pathPackageJSON, 'utf-8');
+	const userPkgJson = JSON.parse(raw) as UserPackageJson;
 
 	userPkgJson.devDependencies ??= {};
 	userPkgJson.devDependencies[TOOLING_PACKAGE_NAME] = `^${pkgJson.version}`;
