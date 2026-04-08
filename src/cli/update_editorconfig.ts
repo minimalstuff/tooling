@@ -6,7 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { PromptResult } from './index.js';
 
 const presetPath = fileURLToPath(
-	new URL('../../preset/.editorconfig', import.meta.url),
+	new URL('../../preset/.editorconfig', import.meta.url)
 );
 
 export async function updateEditorConfig(result: PromptResult) {

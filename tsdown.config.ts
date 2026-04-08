@@ -6,7 +6,6 @@ export default defineConfig({
 	shims: true,
 	clean: true,
 	format: ['esm'],
-	copy: ['./src/tsconfigs'],
 	deps: {
 		neverBundle: ['oxfmt', 'oxlint'],
 	},

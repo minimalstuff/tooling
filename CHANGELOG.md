@@ -10,4 +10,4 @@
 
 ### Features
 
-* replace vue with react ([4938367](https://github.com/minimalstuff/tooling/commit/49383672cd1a0dcdd58682b7608f6c49cd293be6))
+- replace vue with react ([4938367](https://github.com/minimalstuff/tooling/commit/49383672cd1a0dcdd58682b7608f6c49cd293be6))

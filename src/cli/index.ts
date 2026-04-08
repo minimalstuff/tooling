@@ -12,17 +12,12 @@ import {
 
 import { updateOxc } from './update_oxc.js';
 import { updatePkgJson } from './update_pkg.json.js';
-import { updateTsconfig } from './update_tsconfig.js';
 import { TOOLING_PACKAGE_NAME } from '../constants.js';
 import { updateEditorConfig } from './update_editorconfig.js';
 
-export type ConfigTool = 'editorconfig' | 'tsconfig' | 'oxc';
+export type ConfigTool = 'editorconfig' | 'oxc';
 
-export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
-	'editorconfig',
-	'tsconfig',
-	'oxc',
-];
+export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = ['editorconfig', 'oxc'];
 
 export interface PromptResult {
 	tools: ConfigTool[];
@@ -40,8 +35,8 @@ async function main() {
 
 	log.info(
 		`You are about to configure ${TOOLING_PACKAGE_NAME} in the current directory: ${color.green(
-			cwd,
-		)}`,
+			cwd
+		)}`
 	);
 
 	const shouldContinue = await confirm({ message: `Continue ?` });
@@ -51,7 +46,6 @@ async function main() {
 		message: 'Select tools to configure',
 		options: [
 			{ value: 'editorconfig', label: 'EditorConfig' },
-			{ value: 'tsconfig', label: 'TypeScript' },
 			{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
 		],
 		initialValues: DEFAULT_SELECTED_TOOLS,
@@ -61,11 +55,10 @@ async function main() {
 
 	await updatePkgJson({ tools });
 	await updateEditorConfig({ tools });
-	await updateTsconfig({ tools });
 	await updateOxc({ tools });
 
 	log.success(
-		'All done. Make sure to install the dependencies with `pnpm install`.',
+		'All done. Make sure to install the dependencies with `pnpm install`.'
 	);
 }
 

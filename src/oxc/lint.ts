@@ -86,6 +86,9 @@ function defaultPreset() {
 		ignorePatterns: IGNORE_PATTERNS,
 		plugins: ['typescript', 'node', 'eslint', 'oxc'],
 		rules: {},
+		options: {
+			typeAware: true,
+		},
 	});
 }
 
