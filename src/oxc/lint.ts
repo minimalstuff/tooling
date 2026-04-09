@@ -6,24 +6,17 @@ const STRICT_TYPE_AWARE_RULES = {
 	'typescript/await-thenable': 'error',
 	'typescript/no-floating-promises': 'error',
 	'typescript/no-misused-promises': 'error',
-	'typescript/no-unnecessary-condition': 'error',
+	'typescript/no-unnecessary-condition': 'off',
 	'typescript/no-unnecessary-type-assertion': 'error',
-	'typescript/no-unsafe-argument': 'error',
-	'typescript/no-unsafe-assignment': 'error',
-	'typescript/no-unsafe-call': 'error',
-	'typescript/no-unsafe-member-access': 'error',
-	'typescript/no-unsafe-return': 'error',
+	'typescript/no-unsafe-argument': 'off',
+	'typescript/no-unsafe-assignment': 'off',
+	'typescript/no-unsafe-call': 'off',
+	'typescript/no-unsafe-member-access': 'off',
+	'typescript/no-unsafe-return': 'off',
 	'typescript/prefer-nullish-coalescing': 'error',
 	'typescript/prefer-optional-chain': 'error',
-	'typescript/strict-boolean-expressions': [
-		'error',
-		{
-			allowNullableBoolean: true,
-			allowNullableObject: true,
-			allowNullableString: true,
-		},
-	],
-	'typescript/switch-exhaustiveness-check': 'error',
+	'typescript/strict-boolean-expressions': 'off',
+	'typescript/switch-exhaustiveness-check': 'off',
 };
 
 interface MinimalstuffOxlintConfig {
