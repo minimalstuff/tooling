@@ -3,6 +3,11 @@ import * as p from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { installPackage } from '@antfu/install-pkg';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import {
+	type ParseError,
+	parse as parseJsonc,
+	printParseErrorCode,
+} from 'jsonc-parser';
 
 import type { PromptResult } from './index.js';
 import {
@@ -67,7 +72,25 @@ async function updateVscodeSettings(cwd: string) {
 	let settings: Record<string, unknown> = {};
 	if (existsSync(settingsPath)) {
 		const content = await readFile(settingsPath, 'utf-8');
-		settings = JSON.parse(content) as Record<string, unknown>;
+		const parseErrors: ParseError[] = [];
+		const parsed = parseJsonc(content, parseErrors, {
+			allowTrailingComma: true,
+			allowEmptyContent: true,
+		});
+		if (parseErrors.length > 0) {
+			const detail = parseErrors
+				.map((e) => `${printParseErrorCode(e.error)} @${e.offset}`)
+				.join(', ');
+			throw new SyntaxError(`Invalid JSONC in ${settingsPath}: ${detail}`);
+		}
+		if (
+			parsed !== null &&
+			parsed !== undefined &&
+			typeof parsed === 'object' &&
+			!Array.isArray(parsed)
+		) {
+			settings = parsed as Record<string, unknown>;
+		}
 	}
 
 	for (const [key, value] of Object.entries(vscodeSettings)) {
