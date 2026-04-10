@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0](https://github.com/minimalstuff/tooling/compare/v0.2.1...v0.3.0) (2026-04-10)
+
+### Features
+
+* integrate jsonc-parser for improved JSONC handling in update_oxc.ts ([00d10b3](https://github.com/minimalstuff/tooling/commit/00d10b387d57e6933b7b5f9c4ecb18cf9987ca2d))
+
 ## [0.2.1](https://github.com/minimalstuff/tooling/compare/v0.2.0...v0.2.1) (2026-04-09)
 
 ## [0.2.0](https://github.com/minimalstuff/tooling/compare/v0.1.3...v0.2.0) (2026-04-08)
