@@ -31,7 +31,6 @@ export default minimalstuffPreset()
 
 const vscodeSettings = {
 	'oxc.typeAware': true,
-	'oxc.fmt.experimental': true,
 	'editor.defaultFormatter': 'oxc.oxc-vscode',
 };
 
