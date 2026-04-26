@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0) (2026-04-26)
+
+### Features
+
+* add type detection for AdonisJS and React ([2eb51a2](https://github.com/minimalstuff/tooling/commit/2eb51a279f066376bb54fb8a5b8512b56d25300c))
+* enable perfectionist import sorting by default in minimalstuffPreset ([42d67ff](https://github.com/minimalstuff/tooling/commit/42d67ff7e5384abb4d68d9b51426972f242668c4))
+
 ## [0.4.0](https://github.com/minimalstuff/tooling/compare/v0.3.0...v0.4.0) (2026-04-26)
 
 ### Features
