@@ -46,10 +46,19 @@ Options:
 | `perfectionist` | `boolean` | `false` | Enable import sorting via perfectionist |
 
 ```ts
+import {
+	ADONISJS_DEFAULT_IGNORE_PATTERNS,
+	minimalstuffPreset,
+} from '@minimalstuff/tooling/oxc/lint';
+
 export default defineConfig({
+	ignorePatterns: [...ADONISJS_DEFAULT_IGNORE_PATTERNS, 'tmp/**'],
 	extends: [
 		minimalstuffPreset({ react: true, adonisjs: true, perfectionist: true }),
 	],
+	rules: {
+		'no-unused-vars': 'error',
+	},
 });
 ```
 

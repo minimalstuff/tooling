@@ -2,6 +2,12 @@ import { type DummyRuleMap, type OxlintConfig, defineConfig } from 'oxlint';
 
 import { IGNORE_PATTERNS } from './shared.ts';
 
+export const ADONISJS_DEFAULT_IGNORE_PATTERNS = [
+	'.adonisjs/**',
+	'pnpm-*.yaml',
+	'bin/*',
+];
+
 const STRICT_TYPE_AWARE_RULES = {
 	'typescript/await-thenable': 'error',
 	'typescript/no-floating-promises': 'error',
