@@ -77,6 +77,23 @@ You can override any option:
 export default minimalstuffPreset({ printWidth: 120, semi: true });
 ```
 
+For Adonis projects, you can extend ignore patterns:
+
+```ts
+import {
+	ADONISJS_DEFAULT_IGNORE_PATTERNS,
+	minimalstuffPreset,
+	OXFMT_DEFAULT_IGNORE_PATTERNS,
+} from '@minimalstuff/tooling/oxc/fmt';
+
+export default minimalstuffPreset({
+	ignorePatterns: [
+		...OXFMT_DEFAULT_IGNORE_PATTERNS,
+		...ADONISJS_DEFAULT_IGNORE_PATTERNS,
+	],
+});
+```
+
 Defaults: `printWidth: 100`, `semi: false`, `singleQuote: true`, `trailingComma: 'all'`, `arrowParens: 'avoid'`.
 
 #### Scripts
