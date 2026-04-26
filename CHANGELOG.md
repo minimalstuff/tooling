@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/minimalstuff/tooling/compare/v0.3.0...v0.4.0) (2026-04-26)
+
+### Features
+
+* add AdonisJS default ignore patterns to formatting presets ([6f8c67b](https://github.com/minimalstuff/tooling/commit/6f8c67bc8f377ef8e100de29f9dd2c20897d8f71))
+* add scripts section to user package.json for improved project management ([e6928b5](https://github.com/minimalstuff/tooling/commit/e6928b5eed92212ae78b6cff64e0a9cb47c10ba2))
+* enhance linting configuration with AdonisJS default ignore patterns and additional rules ([d5994ad](https://github.com/minimalstuff/tooling/commit/d5994ad4ae5bef4abf33f4eaae9375f7e0689874))
+
 ## [0.3.0](https://github.com/minimalstuff/tooling/compare/v0.2.1...v0.3.0) (2026-04-10)
 
 ### Features
