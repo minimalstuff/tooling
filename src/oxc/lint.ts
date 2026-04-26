@@ -117,12 +117,17 @@ function defaultPreset() {
 }
 
 export function minimalstuffPreset(config: MinimalstuffOxlintConfig = {}) {
+	const normalizedConfig: MinimalstuffOxlintConfig = {
+		perfectionist: true,
+		...config,
+	};
+
 	return defineConfig({
 		extends: [
 			defaultPreset(),
-			config.react ? reactPreset() : null,
-			config.adonisjs ? adonisjsPreset() : null,
-			config.perfectionist ? perfectionistPreset() : null,
+			normalizedConfig.react ? reactPreset() : null,
+			normalizedConfig.adonisjs ? adonisjsPreset() : null,
+			normalizedConfig.perfectionist ? perfectionistPreset() : null,
 		].filter(Boolean) as OxlintConfig[],
 		rules: {},
 	});

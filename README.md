@@ -43,7 +43,7 @@ Options:
 | --------------- | --------- | ------- | --------------------------------------- |
 | `react`         | `boolean` | `false` | Enable React-specific oxlint plugins    |
 | `adonisjs`      | `boolean` | `false` | Enable AdonisJS-specific rules          |
-| `perfectionist` | `boolean` | `false` | Enable import sorting via perfectionist |
+| `perfectionist` | `boolean` | `true`  | Enable import sorting via perfectionist |
 
 ```ts
 import {
