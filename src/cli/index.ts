@@ -15,9 +15,13 @@ import { updatePkgJson } from './update_pkg.json.js';
 import { TOOLING_PACKAGE_NAME } from '../constants.js';
 import { updateEditorConfig } from './update_editorconfig.js';
 
-export type ConfigTool = 'editorconfig' | 'oxc';
+export type ConfigTool = 'editorconfig' | 'oxc' | 'vscode';
 
-export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = ['editorconfig', 'oxc'];
+export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
+	'editorconfig',
+	'oxc',
+	'vscode',
+];
 
 export interface PromptResult {
 	tools: ConfigTool[];
@@ -47,6 +51,7 @@ async function main() {
 		options: [
 			{ value: 'editorconfig', label: 'EditorConfig' },
 			{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
+			{ value: 'vscode', label: 'VSCode settings (.vscode/settings.json)' },
 		],
 		initialValues: DEFAULT_SELECTED_TOOLS,
 		required: true,

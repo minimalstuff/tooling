@@ -108,7 +108,7 @@ export async function updateOxc(result: PromptResult) {
 		projectType.adonisjs ? oxfmtAdonisConfigContent : oxfmtConfigContent
 	);
 
-	await updateVscodeSettings(cwd);
+	if (result.tools.includes('vscode')) await updateVscodeSettings(cwd);
 	await addScriptsToPackageJson(cwd);
 	await installPackage(oxcPackages, { dev: true, cwd });
 
