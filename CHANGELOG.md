@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0) (2026-05-11)
+
+### Features
+
+* add 'vscode' to ConfigTool and update related settings handling ([b29ad03](https://github.com/minimalstuff/tooling/commit/b29ad03a6400d9283ccd303f16e3382cf85b5998))
+* **cli:** skip pre-selecting tools with existing configs at repo root ([1abfb5e](https://github.com/minimalstuff/tooling/commit/1abfb5e78c3a7392f0e5c29f082e5e4a22160c14))
+
 ## [0.5.0](https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0) (2026-04-26)
 
 ### Features
