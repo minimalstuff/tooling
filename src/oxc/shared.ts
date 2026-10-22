@@ -1,4 +1,4 @@
-export const COMMON_IGNORE_PATTERNS = [
+export const COMMON_IGNORE_PATTERNS: readonly string[] = [
 	'**/node_modules/**',
 	'**/dist/**',
 	'**/build/**',
@@ -7,10 +7,12 @@ export const COMMON_IGNORE_PATTERNS = [
 	'**/*.yaml',
 ];
 
-export const ADONISJS_IGNORE_PATTERNS = [
+export const ADONISJS_IGNORE_PATTERNS: readonly string[] = [
 	'**/.adonisjs/**',
 	'**/bin/*',
 	'**/database/schema.ts',
 ];
 
-export const FORMAT_ONLY_IGNORE_PATTERNS = ['**/CHANGELOG.md'];
+export const FORMAT_ONLY_IGNORE_PATTERNS: readonly string[] = [
+	'**/CHANGELOG.md',
+];

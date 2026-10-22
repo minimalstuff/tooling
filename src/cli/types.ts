@@ -1,4 +1,4 @@
-export type ConfigTool = 'editorconfig' | 'oxc' | 'vscode';
+export type ConfigTool = 'editorconfig' | 'oxc' | 'knip' | 'vscode';
 
 export type PresetName = 'react' | 'adonisjs' | 'vitest';
 

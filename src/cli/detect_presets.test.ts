@@ -4,7 +4,9 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+	detectAdonisjsWorkspacePaths,
 	detectPresetFlags,
+	findAdonisjsWorkspacePaths,
 	detectPresets,
 	toDetectedPresetNames,
 	toPresetFlags,
@@ -131,5 +133,85 @@ describe('detectPresets', () => {
 		await expect(detectPresets(directory)).rejects.toThrow(
 			/apps\/web\/package\.json/
 		);
+	});
+});
+
+describe('findAdonisjsWorkspacePaths', () => {
+	it('should return the root path when the root manifest has an @adonisjs dependency', () => {
+		expect(
+			findAdonisjsWorkspacePaths([
+				{
+					workspacePath: '.',
+					manifest: { dependencies: { '@adonisjs/core': '1' } },
+				},
+			])
+		).toEqual(['.']);
+	});
+
+	it('should return only the workspaces whose manifest has an @adonisjs dependency', () => {
+		expect(
+			findAdonisjsWorkspacePaths([
+				{ workspacePath: '.', manifest: { devDependencies: { vitest: '1' } } },
+				{
+					workspacePath: 'apps/webapp',
+					manifest: { dependencies: { '@adonisjs/core': '1' } },
+				},
+				{ workspacePath: 'apps/extension', manifest: {} },
+			])
+		).toEqual(['apps/webapp']);
+	});
+
+	it('should return nothing when no manifest has an @adonisjs dependency', () => {
+		expect(
+			findAdonisjsWorkspacePaths([
+				{ workspacePath: '.', manifest: { dependencies: { react: '1' } } },
+			])
+		).toEqual([]);
+	});
+});
+
+describe('detectAdonisjsWorkspacePaths', () => {
+	let directory: string;
+
+	beforeEach(async () => {
+		directory = await mkdtemp(join(tmpdir(), 'detect-adonisjs-'));
+	});
+
+	afterEach(async () => {
+		await rm(directory, { recursive: true, force: true });
+	});
+
+	async function writeManifest(
+		relativeDirectory: string,
+		manifest: object
+	): Promise<void> {
+		const manifestDirectory = join(directory, relativeDirectory);
+		await mkdir(manifestDirectory, { recursive: true });
+		await writeFile(
+			join(manifestDirectory, 'package.json'),
+			JSON.stringify(manifest)
+		);
+	}
+
+	it('should return the workspace paths with forward slashes when adonisjs lives in apps and packages', async () => {
+		await writeManifest('.', {});
+		await writeManifest('apps/webapp', {
+			dependencies: { '@adonisjs/core': '1' },
+		});
+		await writeManifest('packages/api', {
+			devDependencies: { '@adonisjs/lucid': '1' },
+		});
+		await writeManifest('packages/ui', { dependencies: { react: '1' } });
+
+		expect((await detectAdonisjsWorkspacePaths(directory)).sort()).toEqual([
+			'apps/webapp',
+			'packages/api',
+		]);
+	});
+
+	it('should return the root path when adonisjs is a root dependency', async () => {
+		await writeManifest('.', { dependencies: { '@adonisjs/core': '1' } });
+
+		expect(await detectAdonisjsWorkspacePaths(directory)).toEqual(['.']);
 	});
 });

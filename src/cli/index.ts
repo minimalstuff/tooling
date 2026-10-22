@@ -5,15 +5,21 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import color from 'picocolors';
 
-import { TOOLING_PACKAGE_NAME } from '../constants.ts';
+import { KNIP_CONFIG_FILE_NAMES, TOOLING_PACKAGE_NAME } from '../constants.ts';
 import { promptPresetsForTools } from './prompt_presets.ts';
 import { exitWhenCancelled } from './prompts.ts';
 import type { ConfigTool, PromptResult } from './types.ts';
 import { updateEditorConfig } from './update_editorconfig.ts';
+import { updateKnip } from './update_knip.ts';
 import { updateOxc } from './update_oxc.ts';
 import { updatePackageScripts } from './update_package_scripts.ts';
 
-const DEFAULT_SELECTED_TOOLS: ConfigTool[] = ['editorconfig', 'oxc', 'vscode'];
+const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
+	'editorconfig',
+	'oxc',
+	'knip',
+	'vscode',
+];
 
 function findGitRoot(startDirectory: string): string | null {
 	let directory = startDirectory;
@@ -40,10 +46,12 @@ async function promptTools(cwd: string): Promise<ConfigTool[]> {
 
 	const hasEditorConfig = existsAtAnyRoot(roots, ['.editorconfig']);
 	const hasVscode = existsAtAnyRoot(roots, ['.vscode']);
+	const hasKnip = existsAtAnyRoot(roots, KNIP_CONFIG_FILE_NAMES);
 
 	const initialValues = DEFAULT_SELECTED_TOOLS.filter((tool) => {
 		if (tool === 'editorconfig') return !hasEditorConfig;
 		if (tool === 'vscode') return !hasVscode;
+		if (tool === 'knip') return !hasKnip;
 		return true;
 	});
 
@@ -57,6 +65,11 @@ async function promptTools(cwd: string): Promise<ConfigTool[]> {
 					...(hasEditorConfig && { hint: 'already exists' }),
 				},
 				{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
+				{
+					value: 'knip',
+					label: 'Knip (unused files, exports, dependencies)',
+					...(hasKnip && { hint: 'already exists' }),
+				},
 				{
 					value: 'vscode',
 					label: 'VSCode settings (.vscode/settings.json)',
@@ -90,6 +103,7 @@ async function main(): Promise<void> {
 	await updateEditorConfig(result);
 	await updatePackageScripts(result);
 	await updateOxc(result);
+	await updateKnip(result);
 
 	log.success(
 		'All done. Make sure to install the dependencies with `pnpm install`.'

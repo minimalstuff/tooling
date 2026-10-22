@@ -4,7 +4,6 @@
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
 		"resolveJsonModule": true,
-		"checkJs": true,
 		"strict": true,
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false,
@@ -24,6 +23,8 @@
 		"outDir": "dist",
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true,
+		"declaration": true,
+		"isolatedDeclarations": true,
 		"types": ["node"]
 	},
 	"include": ["src/**/*"],

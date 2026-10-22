@@ -1,4 +1,5 @@
 import { OXC_FMT_IMPORT, OXC_LINT_IMPORT } from '../constants.ts';
+import { buildPresetConfigFile } from './preset_config_file.ts';
 import type { PresetFlags, PresetName } from './types.ts';
 
 const OXLINT_PRESET_ORDER: readonly PresetName[] = [
@@ -6,10 +7,6 @@ const OXLINT_PRESET_ORDER: readonly PresetName[] = [
 	'react',
 	'vitest',
 ];
-
-function buildPresetConfigFile(importPath: string, presetCall: string): string {
-	return `import { minimalstuffPreset } from '${importPath}';\n\nexport default ${presetCall};\n`;
-}
 
 function buildPresetCall(enabledNames: readonly PresetName[]): string {
 	if (enabledNames.length === 0) return 'minimalstuffPreset()';

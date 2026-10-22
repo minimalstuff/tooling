@@ -1,9 +1,10 @@
 {
 	"name": "@minimalstuff/tooling",
 	"version": "0.6.0",
-	"description": "Shared tooling configs: EditorConfig, OXC (oxlint + oxfmt)",
+	"description": "Shared tooling configs: EditorConfig, OXC (oxlint + oxfmt), Knip",
 	"keywords": [
 		"editorconfig",
+		"knip",
 		"oxc",
 		"oxfmt",
 		"oxlint",
@@ -24,13 +25,15 @@
 	"exports": {
 		"./editorconfig": "./preset/.editorconfig",
 		"./oxc/lint": "./dist/oxc/lint.mjs",
-		"./oxc/fmt": "./dist/oxc/fmt.mjs"
+		"./oxc/fmt": "./dist/oxc/fmt.mjs",
+		"./knip": "./dist/knip/knip.mjs"
 	},
 	"publishConfig": {
 		"access": "public",
 		"provenance": true
 	},
 	"scripts": {
+		"knip": "knip",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"format": "oxfmt && oxlint --fix",
@@ -38,7 +41,7 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"build": "tsdown",
-		"checks": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build",
+		"checks": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm test && pnpm build",
 		"release": "release-it"
 	},
 	"dependencies": {
@@ -51,6 +54,7 @@
 	"devDependencies": {
 		"@release-it/conventional-changelog": "^12.0.2",
 		"@types/node": "^26.6.5",
+		"knip": "6.42.1",
 		"oxfmt": "^0.74.0",
 		"oxlint": "^1.89.0",
 		"oxlint-tsgolint": "^7.0.2004",
@@ -60,11 +64,15 @@
 		"vitest": "^5.0.5"
 	},
 	"peerDependencies": {
+		"knip": ">=6.42.1",
 		"oxfmt": ">=0.74.0",
 		"oxlint": ">=1.89.0",
 		"oxlint-tsgolint": ">=7.0.2004"
 	},
 	"peerDependenciesMeta": {
+		"knip": {
+			"optional": true
+		},
 		"oxfmt": {
 			"optional": true
 		},

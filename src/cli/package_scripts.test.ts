@@ -36,11 +36,11 @@ describe('mergeScripts', () => {
 });
 
 describe('buildScripts', () => {
-	it('should return no script when oxc is not selected', () => {
+	it('should return no script when neither oxc nor knip is selected', () => {
 		expect(buildScripts(['editorconfig', 'vscode'])).toEqual({});
 	});
 
-	it('should return the oxc scripts and a check script when oxc is selected', () => {
+	it('should return the oxc scripts and a check script without knip when only oxc is selected', () => {
 		expect(buildScripts(['oxc'])).toEqual({
 			lint: 'oxlint',
 			'lint:fix': 'oxlint --fix',
@@ -49,5 +49,18 @@ describe('buildScripts', () => {
 			typecheck: 'tsc --noEmit',
 			check: 'pnpm lint && pnpm format:check && pnpm typecheck',
 		});
+	});
+
+	it('should only return the knip script when only knip is selected', () => {
+		expect(buildScripts(['knip'])).toEqual({ knip: 'knip' });
+	});
+
+	it('should end the check script with knip when oxc and knip are selected', () => {
+		const scripts = buildScripts(['oxc', 'knip']);
+
+		expect(scripts.knip).toBe('knip');
+		expect(scripts.check).toBe(
+			'pnpm lint && pnpm format:check && pnpm typecheck && pnpm knip'
+		);
 	});
 });

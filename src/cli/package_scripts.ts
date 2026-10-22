@@ -8,11 +8,16 @@ const OXC_SCRIPTS: Readonly<Record<string, string>> = {
 	typecheck: 'tsc --noEmit',
 };
 
+const KNIP_SCRIPTS: Readonly<Record<string, string>> = {
+	knip: 'knip',
+};
+
 const OXC_CHECK_SCRIPT_NAMES: readonly string[] = [
 	'lint',
 	'format:check',
 	'typecheck',
 ];
+const KNIP_CHECK_SCRIPT_NAMES: readonly string[] = ['knip'];
 
 function toRunCommand(scriptName: string): string {
 	return `pnpm ${scriptName}`;
@@ -27,9 +32,18 @@ function buildCheckScript(
 export function buildScripts(
 	tools: readonly ConfigTool[]
 ): Record<string, string> {
-	if (!tools.includes('oxc')) return {};
+	const hasOxc = tools.includes('oxc');
+	const hasKnip = tools.includes('knip');
+	const checkScriptNames = [
+		...(hasOxc ? OXC_CHECK_SCRIPT_NAMES : []),
+		...(hasKnip ? KNIP_CHECK_SCRIPT_NAMES : []),
+	];
 
-	return { ...OXC_SCRIPTS, ...buildCheckScript(OXC_CHECK_SCRIPT_NAMES) };
+	return {
+		...(hasOxc && OXC_SCRIPTS),
+		...(hasKnip && KNIP_SCRIPTS),
+		...(hasOxc && buildCheckScript(checkScriptNames)),
+	};
 }
 
 export interface ScriptsMerge {

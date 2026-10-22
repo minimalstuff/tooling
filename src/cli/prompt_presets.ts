@@ -8,7 +8,7 @@ import {
 import { exitWhenCancelled } from './prompts.ts';
 import type { ConfigTool, PresetFlags, PresetName } from './types.ts';
 
-const TOOLS_USING_PRESETS: readonly ConfigTool[] = ['oxc'];
+const TOOLS_USING_PRESETS: readonly ConfigTool[] = ['oxc', 'knip'];
 
 const NO_PRESETS: PresetFlags = toPresetFlags([]);
 

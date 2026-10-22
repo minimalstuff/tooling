@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { readJsonDocument } from './json_file.ts';
 import type { PackageManifest, PresetFlags, PresetName } from './types.ts';
 
-const ROOT_WORKSPACE_PATH = '.';
+export const ROOT_WORKSPACE_PATH = '.';
 
 const WORKSPACE_DIRECTORIES = ['apps', 'packages'];
 
@@ -20,7 +20,7 @@ const ADONISJS_SCOPE_PREFIX = '@adonisjs/';
 
 type DependencyNames = ReadonlySet<string>;
 
-export function collectDependencyNames(
+function collectDependencyNames(
 	manifests: readonly PackageManifest[]
 ): DependencyNames {
 	const names = new Set<string>();
@@ -62,7 +62,7 @@ export function toPresetFlags(names: readonly PresetName[]): PresetFlags {
 	};
 }
 
-interface WorkspaceManifest {
+export interface WorkspaceManifest {
 	workspacePath: string;
 	manifest: PackageManifest;
 }
@@ -114,7 +114,21 @@ async function readWorkspaceManifests(
 	);
 }
 
+export function findAdonisjsWorkspacePaths(
+	workspaceManifests: readonly WorkspaceManifest[]
+): string[] {
+	return workspaceManifests
+		.filter(({ manifest }) => detectPresetFlags([manifest]).adonisjs)
+		.map(({ workspacePath }) => workspacePath);
+}
+
 export async function detectPresets(cwd: string): Promise<PresetFlags> {
 	const workspaceManifests = await readWorkspaceManifests(cwd);
 	return detectPresetFlags(workspaceManifests.map(({ manifest }) => manifest));
+}
+
+export async function detectAdonisjsWorkspacePaths(
+	cwd: string
+): Promise<string[]> {
+	return findAdonisjsWorkspacePaths(await readWorkspaceManifests(cwd));
 }

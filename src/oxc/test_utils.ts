@@ -20,8 +20,14 @@ const FIXTURE_TSCONFIG = JSON.stringify({
 	},
 });
 
-export const LINT_PRESET_PATH = join(REPOSITORY_ROOT, 'src/oxc/lint.ts');
-export const FORMAT_PRESET_PATH = join(REPOSITORY_ROOT, 'src/oxc/fmt.ts');
+export const LINT_PRESET_PATH: string = join(
+	REPOSITORY_ROOT,
+	'src/oxc/lint.ts'
+);
+export const FORMAT_PRESET_PATH: string = join(
+	REPOSITORY_ROOT,
+	'src/oxc/fmt.ts'
+);
 
 export interface CommandOutcome {
 	exitCode: number;
@@ -60,7 +66,7 @@ async function writeFixtureFiles(
 }
 
 export async function runBinary(
-	binaryName: 'oxlint' | 'oxfmt',
+	binaryName: 'oxlint' | 'oxfmt' | 'knip',
 	directory: string,
 	args: string[]
 ): Promise<CommandOutcome> {

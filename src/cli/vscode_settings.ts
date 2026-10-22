@@ -11,7 +11,7 @@ import {
 	stringifyJson,
 } from './json_file.ts';
 
-export const VSCODE_SETTINGS: Readonly<JsonObject> = {
+const VSCODE_SETTINGS: Readonly<JsonObject> = {
 	'oxc.typeAware': true,
 	'editor.defaultFormatter': 'oxc.oxc-vscode',
 };
