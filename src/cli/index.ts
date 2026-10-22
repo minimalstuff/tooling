@@ -105,9 +105,7 @@ async function main(): Promise<void> {
 	await updateOxc(result);
 	await updateKnip(result);
 
-	log.success(
-		'All done. Make sure to install the dependencies with `pnpm install`.'
-	);
+	log.success('All done.');
 }
 
 main().catch((error: unknown) => {

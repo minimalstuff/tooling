@@ -1,6 +1,9 @@
 import { KNIP_IMPORT } from '../constants.ts';
 import { ROOT_WORKSPACE_PATH } from './detect_presets.ts';
-import { buildPresetConfigFile } from './preset_config_file.ts';
+import {
+	buildPresetConfigFile,
+	type PresetOption,
+} from './preset_config_file.ts';
 
 export type KnipAdonisjsOption = true | readonly string[];
 
@@ -12,16 +15,16 @@ export function toKnipAdonisjsOption(
 	return adonisjsWorkspacePaths;
 }
 
-function buildPresetCall(adonisjs: KnipAdonisjsOption | undefined): string {
-	if (adonisjs === undefined) return 'minimalstuffPreset()';
-	if (adonisjs === true) return 'minimalstuffPreset({ adonisjs: true })';
-
-	const quotedPaths = adonisjs.map((path) => `'${path}'`).join(', ');
-	return `minimalstuffPreset({ adonisjs: [${quotedPaths}] })`;
+function toPresetOptions(
+	adonisjs: KnipAdonisjsOption | undefined
+): PresetOption[] {
+	if (adonisjs === undefined) return [];
+	if (adonisjs === true) return [{ key: 'adonisjs', value: 'true' }];
+	return [{ key: 'adonisjs', value: adonisjs }];
 }
 
 export function buildKnipConfigContent(
 	adonisjs: KnipAdonisjsOption | undefined
 ): string {
-	return buildPresetConfigFile(KNIP_IMPORT, buildPresetCall(adonisjs));
+	return buildPresetConfigFile(KNIP_IMPORT, toPresetOptions(adonisjs));
 }

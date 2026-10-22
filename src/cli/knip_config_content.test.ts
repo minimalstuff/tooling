@@ -5,6 +5,12 @@ import {
 	toKnipAdonisjsOption,
 } from './knip_config_content.ts';
 
+const LONG_WORKSPACE_PATHS = [
+	'apps/customer-facing-webapp',
+	'packages/internal-backend-api',
+	'packages/background-workers',
+];
+
 describe('toKnipAdonisjsOption', () => {
 	it('should return true when the root workspace uses adonisjs', () => {
 		expect(toKnipAdonisjsOption(['.'])).toBe(true);
@@ -35,13 +41,19 @@ describe('buildKnipConfigContent', () => {
 
 	it('should enable adonisjs on the root when the option is true', () => {
 		expect(buildKnipConfigContent(true)).toContain(
-			'minimalstuffPreset({ adonisjs: true });'
+			'minimalstuffPreset({\n\tadonisjs: true,\n});'
 		);
 	});
 
-	it('should list the quoted workspace paths when the option is an array', () => {
+	it('should list the quoted workspace paths on one line when they fit the print width', () => {
 		expect(buildKnipConfigContent(['apps/webapp', 'packages/api'])).toContain(
-			"minimalstuffPreset({ adonisjs: ['apps/webapp', 'packages/api'] });"
+			"minimalstuffPreset({\n\tadonisjs: ['apps/webapp', 'packages/api'],\n});"
+		);
+	});
+
+	it('should list one quoted workspace path per line when they exceed the print width', () => {
+		expect(buildKnipConfigContent(LONG_WORKSPACE_PATHS)).toContain(
+			"minimalstuffPreset({\n\tadonisjs: [\n\t\t'apps/customer-facing-webapp',\n\t\t'packages/internal-backend-api',\n\t\t'packages/background-workers',\n\t],\n});"
 		);
 	});
 });

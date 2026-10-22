@@ -21,7 +21,7 @@ describe('buildOxlintConfigContent', () => {
 
 	it('should only list enabled presets', () => {
 		expect(buildOxlintConfigContent({ ...NO_PRESETS, react: true })).toContain(
-			'minimalstuffPreset({ react: true });'
+			'minimalstuffPreset({\n\treact: true,\n});'
 		);
 	});
 
@@ -32,7 +32,7 @@ describe('buildOxlintConfigContent', () => {
 			vitest: true,
 		});
 		expect(content).toBe(
-			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';\n\nexport default minimalstuffPreset({ adonisjs: true, react: true, vitest: true });\n"
+			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';\n\nexport default minimalstuffPreset({\n\tadonisjs: true,\n\treact: true,\n\tvitest: true,\n});\n"
 		);
 	});
 
@@ -52,7 +52,7 @@ describe('buildOxfmtConfigContent', () => {
 
 	it('should pass adonisjs when adonisjs is enabled', () => {
 		expect(buildOxfmtConfigContent({ ...NO_PRESETS, adonisjs: true })).toBe(
-			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/fmt';\n\nexport default minimalstuffPreset({ adonisjs: true });\n"
+			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/fmt';\n\nexport default minimalstuffPreset({\n\tadonisjs: true,\n});\n"
 		);
 	});
 });
