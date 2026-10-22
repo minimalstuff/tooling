@@ -37,30 +37,30 @@
 		"build": "tsdown",
 		"release": "release-it",
 		"typecheck": "tsc --noEmit",
-		"checks": "pnpm typecheck && pnpm lint"
+		"checks": "pnpm typecheck && pnpm lint && pnpm build"
 	},
 	"dependencies": {
-		"@adonisjs/eslint-plugin": "^2.2.1",
-		"@antfu/install-pkg": "^1.1.0",
-		"@clack/prompts": "^1.0.1",
-		"eslint-plugin-perfectionist": "^5.5.0",
+		"@adonisjs/eslint-plugin": "^2.2.2",
+		"@antfu/install-pkg": "^2.1.0",
+		"@clack/prompts": "^1.8.1",
+		"eslint-plugin-perfectionist": "^5.13.0",
 		"jsonc-parser": "^3.3.1",
 		"picocolors": "^1.1.1"
 	},
 	"devDependencies": {
-		"@release-it/conventional-changelog": "^10.0.6",
-		"@types/node": "^25.2.3",
-		"oxfmt": "^0.40.0",
-		"oxlint": "^1.55.0",
-		"oxlint-tsgolint": "^0.20.0",
-		"release-it": "^19.2.4",
-		"tsdown": "^0.21.3",
-		"typescript": "^5.9.3"
+		"@release-it/conventional-changelog": "^12.0.2",
+		"@types/node": "^26.6.5",
+		"oxfmt": "^0.74.0",
+		"oxlint": "^1.89.0",
+		"oxlint-tsgolint": "^7.0.2004",
+		"release-it": "^21.1.1",
+		"tsdown": "^0.23.1",
+		"typescript": "^7.0.2"
 	},
 	"peerDependencies": {
-		"oxfmt": ">=0.40.0",
-		"oxlint": ">=1.55.0",
-		"oxlint-tsgolint": ">=0.20.0"
+		"oxfmt": ">=0.74.0",
+		"oxlint": ">=1.89.0",
+		"oxlint-tsgolint": ">=7.0.2004"
 	},
 	"peerDependenciesMeta": {
 		"oxfmt": {
@@ -73,7 +73,10 @@
 			"optional": true
 		}
 	},
-	"packageManager": "pnpm@10.29.3",
+	"engines": {
+		"node": ">=26"
+	},
+	"packageManager": "pnpm@12.15.0",
 	"release-it": {
 		"git": {
 			"requireCleanWorkingDir": true,

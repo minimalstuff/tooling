@@ -20,9 +20,11 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"useUnknownInCatchVariables": true,
+		"rootDir": "src",
 		"outDir": "dist",
 		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"types": ["node"]
 	},
 	"include": ["src/**/*"],
 	"exclude": ["dist"]
