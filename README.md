@@ -202,7 +202,7 @@ Other changes:
 
 ## Publishing
 
-Add a repository secret named `NPM_TOKEN` (**Settings > Secrets and variables > Actions**) holding an automation token from [npmjs.com/access-tokens](https://www.npmjs.com/access-tokens) with publish rights on `@minimalstuff/tooling`.
+Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC), no token needed. On npmjs.com, `@minimalstuff/tooling` > **Settings > Trusted publishing** must list GitHub Actions with organization `minimalstuff`, repository `tooling` and workflow `publish.yml`. Publishing a GitHub release triggers the workflow.
 
 ---
 
