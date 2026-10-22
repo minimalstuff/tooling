@@ -24,7 +24,16 @@ Run this command in your project root directory:
 pnpm dlx @minimalstuff/tooling@latest
 ```
 
-The CLI lets you pick the tools to set up: EditorConfig, OXC and VSCode settings.
+The CLI lets you pick the tools to set up: EditorConfig, OXC and VSCode settings. For OXC, it lets you pick the presets (`react`, `adonisjs`, `vitest`), pre-selected from the dependencies it detects. It asks before overwriting an existing config file and only adds the `package.json` scripts that do not exist yet:
+
+| Script         | Command                                            |
+| -------------- | -------------------------------------------------- |
+| `lint`         | `oxlint`                                           |
+| `lint:fix`     | `oxlint --fix`                                     |
+| `format`       | `oxfmt && oxlint --fix`                            |
+| `format:check` | `oxfmt --check`                                    |
+| `typecheck`    | `tsc --noEmit`                                     |
+| `check`        | `pnpm lint && pnpm format:check && pnpm typecheck` |
 
 ### Manual install
 
@@ -144,6 +153,7 @@ Other changes:
 - Remove the ignore patterns that are now defaults from your configs.
 - The `eslint-plugin-perfectionist` dependency is no longer needed.
 - Correctness rules are now errors and new type-aware rules are enabled (see [oxlint](#oxlint)): `pnpm lint` may fail where it passed before.
+- The CLI only adds missing scripts, so update existing ones by hand: drop `--fix-dangerously` from `lint:fix` and replace `format: "pnpm lint:fix; oxfmt ."` with `format: "oxfmt && oxlint --fix"` (see [CLI](#cli)).
 
 ## Publishing
 

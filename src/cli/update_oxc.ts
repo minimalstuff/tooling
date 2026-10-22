@@ -1,187 +1,59 @@
 import { installPackage } from '@antfu/install-pkg';
-import * as p from '@clack/prompts';
-import {
-	type ParseError,
-	parse as parseJsonc,
-	printParseErrorCode,
-} from 'jsonc-parser';
+import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { TOOLING_PACKAGE_NAME } from '../constants.ts';
 import {
-	OXC_FMT_IMPORT,
-	OXC_LINT_IMPORT,
-	TOOLING_PACKAGE_NAME,
-} from '../constants.js';
-import type { PromptResult } from './index.js';
+	buildOxfmtConfigContent,
+	buildOxlintConfigContent,
+} from './oxc_config_content.ts';
+import type { PromptResult } from './types.ts';
+import { updateVscodeSettings } from './vscode_settings.ts';
+import { writeGeneratedFile } from './write_generated_file.ts';
 
-function buildOxlintConfigContent(options: {
-	adonisjs: boolean;
-	react: boolean;
-}) {
-	const presetOptions: string[] = [];
-
-	if (options.adonisjs) presetOptions.push('adonisjs: true');
-	if (options.react) presetOptions.push('react: true');
-
-	const presetCall =
-		presetOptions.length > 0
-			? `minimalstuffPreset({ ${presetOptions.join(', ')} })`
-			: 'minimalstuffPreset()';
-
-	return `import { minimalstuffPreset } from '${OXC_LINT_IMPORT}'
-
-export default ${presetCall}
-`;
-}
-
-function buildOxfmtConfigContent(options: { adonisjs: boolean }) {
-	const presetCall = options.adonisjs
-		? 'minimalstuffPreset({ adonisjs: true })'
-		: 'minimalstuffPreset()';
-
-	return `import { minimalstuffPreset } from '${OXC_FMT_IMPORT}'
-
-export default ${presetCall}
-`;
-}
-
-const vscodeSettings = {
-	'oxc.typeAware': true,
-	'editor.defaultFormatter': 'oxc.oxc-vscode',
-};
-
-const oxcScripts = {
-	lint: 'oxlint .',
-	'lint:fix': 'oxlint . --fix --fix-suggestions --fix-dangerously',
-	format: 'pnpm lint:fix; oxfmt .',
-	'format:check': 'oxfmt . --check',
-	typecheck: 'tsc --noEmit',
-	check: 'pnpm run lint && pnpm run format:check && pnpm run typecheck',
-};
-
-const oxcPackages = [
+const OXC_PACKAGES = [
 	'oxfmt',
 	'oxlint',
 	'oxlint-tsgolint',
 	TOOLING_PACKAGE_NAME,
 ];
 
-export async function updateOxc(result: PromptResult) {
+const OXLINT_CONFIG_FILE = 'oxlint.config.ts';
+const OXFMT_CONFIG_FILE = 'oxfmt.config.ts';
+const CONFLICTING_OXLINT_CONFIG_FILES = ['.oxlintrc.json', '.oxlintrc.jsonc'];
+const CONFLICTING_OXFMT_CONFIG_FILES = ['.oxfmtrc.json', '.oxfmtrc.jsonc'];
+
+function warnAboutConflictingConfigs(cwd: string): void {
+	const conflictingFiles = [
+		...CONFLICTING_OXLINT_CONFIG_FILES,
+		...CONFLICTING_OXFMT_CONFIG_FILES,
+	].filter((fileName) => existsSync(join(cwd, fileName)));
+
+	for (const fileName of conflictingFiles) {
+		log.warn(
+			`${fileName} found: it will conflict with the generated .ts config. Consider removing it.`
+		);
+	}
+}
+
+export async function updateOxc(result: PromptResult): Promise<void> {
 	if (!result.tools.includes('oxc')) return;
 
 	const cwd = process.cwd();
-	const projectType = await getProjectType(cwd);
 
-	await writeFile(
-		join(cwd, 'oxlint.config.ts'),
-		buildOxlintConfigContent(projectType)
+	warnAboutConflictingConfigs(cwd);
+	await writeGeneratedFile(
+		join(cwd, OXLINT_CONFIG_FILE),
+		buildOxlintConfigContent(result.presetFlags)
 	);
-	await writeFile(
-		join(cwd, 'oxfmt.config.ts'),
-		buildOxfmtConfigContent(projectType)
+	await writeGeneratedFile(
+		join(cwd, OXFMT_CONFIG_FILE),
+		buildOxfmtConfigContent(result.presetFlags)
 	);
 
 	if (result.tools.includes('vscode')) await updateVscodeSettings(cwd);
-	await addScriptsToPackageJson(cwd);
-	await installPackage(oxcPackages, { dev: true, cwd });
+	await installPackage(OXC_PACKAGES, { dev: true, cwd });
 
-	p.log.success('OXC configured (oxlint + oxfmt) 🦀');
-}
-
-type ProjectPackageJson = {
-	dependencies?: Record<string, string>;
-	devDependencies?: Record<string, string>;
-	peerDependencies?: Record<string, string>;
-	[key: string]: unknown;
-};
-
-function hasAdonisDependency(deps?: Record<string, string>) {
-	if (!deps) return false;
-
-	return Object.keys(deps).some((name) => name.startsWith('@adonisjs/'));
-}
-
-function hasReactDependency(deps?: Record<string, string>) {
-	if (!deps) return false;
-
-	return (
-		'react' in deps ||
-		'react-dom' in deps ||
-		'@types/react' in deps ||
-		'@types/react-dom' in deps
-	);
-}
-
-async function getProjectType(cwd: string) {
-	const pkgPath = join(cwd, 'package.json');
-	const raw = await readFile(pkgPath, 'utf-8');
-	const pkg = JSON.parse(raw) as ProjectPackageJson;
-
-	const adonisjs =
-		hasAdonisDependency(pkg.dependencies) ||
-		hasAdonisDependency(pkg.devDependencies) ||
-		hasAdonisDependency(pkg.peerDependencies);
-
-	const react =
-		hasReactDependency(pkg.dependencies) ||
-		hasReactDependency(pkg.devDependencies) ||
-		hasReactDependency(pkg.peerDependencies);
-
-	return { adonisjs, react };
-}
-
-async function updateVscodeSettings(cwd: string) {
-	const vscodePath = join(cwd, '.vscode');
-	const settingsPath = join(vscodePath, 'settings.json');
-
-	if (!existsSync(vscodePath)) await mkdir(vscodePath);
-
-	let settings: Record<string, unknown> = {};
-	if (existsSync(settingsPath)) {
-		const content = await readFile(settingsPath, 'utf-8');
-		const parseErrors: ParseError[] = [];
-		const parsed = parseJsonc(content, parseErrors, {
-			allowTrailingComma: true,
-			allowEmptyContent: true,
-		});
-		if (parseErrors.length > 0) {
-			const detail = parseErrors
-				.map((e) => `${printParseErrorCode(e.error)} @${e.offset}`)
-				.join(', ');
-			throw new SyntaxError(`Invalid JSONC in ${settingsPath}: ${detail}`);
-		}
-		if (
-			parsed !== null &&
-			parsed !== undefined &&
-			typeof parsed === 'object' &&
-			!Array.isArray(parsed)
-		) {
-			settings = parsed as Record<string, unknown>;
-		}
-	}
-
-	for (const [key, value] of Object.entries(vscodeSettings)) {
-		if (!(key in settings)) settings[key] = value;
-	}
-
-	await writeFile(settingsPath, JSON.stringify(settings, null, 2));
-}
-
-type PackageJsonForScripts = {
-	scripts?: Record<string, string>;
-	[key: string]: unknown;
-};
-
-async function addScriptsToPackageJson(cwd: string) {
-	const pkgPath = join(cwd, 'package.json');
-	const raw = await readFile(pkgPath, 'utf-8');
-	const pkg = JSON.parse(raw) as PackageJsonForScripts;
-
-	pkg.scripts ??= {};
-	for (const [key, value] of Object.entries(oxcScripts))
-		pkg.scripts[key] = value;
-
-	await writeFile(pkgPath, JSON.stringify(pkg, null, 2));
+	log.success('OXC configured (oxlint + oxfmt)');
 }

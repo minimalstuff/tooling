@@ -1,107 +1,102 @@
 #!/usr/bin/env node
 
-import {
-	cancel,
-	confirm,
-	intro,
-	isCancel,
-	log,
-	multiselect,
-} from '@clack/prompts';
+import { confirm, intro, log, multiselect } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import color from 'picocolors';
 
-import { TOOLING_PACKAGE_NAME } from '../constants.js';
-import { updateEditorConfig } from './update_editorconfig.js';
-import { updateOxc } from './update_oxc.js';
-import { updatePkgJson } from './update_pkg.json.js';
+import { TOOLING_PACKAGE_NAME } from '../constants.ts';
+import { promptPresetsForTools } from './prompt_presets.ts';
+import { exitWhenCancelled } from './prompts.ts';
+import type { ConfigTool, PromptResult } from './types.ts';
+import { updateEditorConfig } from './update_editorconfig.ts';
+import { updateOxc } from './update_oxc.ts';
+import { updatePackageScripts } from './update_package_scripts.ts';
 
-export type ConfigTool = 'editorconfig' | 'oxc' | 'vscode';
+const DEFAULT_SELECTED_TOOLS: ConfigTool[] = ['editorconfig', 'oxc', 'vscode'];
 
-export const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
-	'editorconfig',
-	'oxc',
-	'vscode',
-];
-
-export interface PromptResult {
-	tools: ConfigTool[];
-}
-
-function exit() {
-	cancel('Cancelled');
-	return process.exit(0);
-}
-
-function findGitRoot(startDir: string): string | null {
-	let dir = startDir;
+function findGitRoot(startDirectory: string): string | null {
+	let directory = startDirectory;
 	while (true) {
-		if (existsSync(join(dir, '.git'))) return dir;
-		const parent = dirname(dir);
-		if (parent === dir) return null;
-		dir = parent;
+		if (existsSync(join(directory, '.git'))) return directory;
+		const parent = dirname(directory);
+		if (parent === directory) return null;
+		directory = parent;
 	}
 }
 
-async function main() {
-	const cwd = process.cwd();
-
-	intro(color.blue(TOOLING_PACKAGE_NAME));
-
-	log.info(
-		`You are about to configure ${TOOLING_PACKAGE_NAME} in the current directory: ${color.green(
-			cwd
-		)}`
+function existsAtAnyRoot(
+	roots: readonly string[],
+	entryNames: readonly string[]
+): boolean {
+	return roots.some((root) =>
+		entryNames.some((entryName) => existsSync(join(root, entryName)))
 	);
+}
 
-	const shouldContinue = await confirm({ message: `Continue ?` });
-	if (isCancel(shouldContinue)) return exit();
-
+async function promptTools(cwd: string): Promise<ConfigTool[]> {
 	const gitRoot = findGitRoot(cwd);
-	const rootToCheck = gitRoot && gitRoot !== cwd ? gitRoot : null;
+	const roots = gitRoot && gitRoot !== cwd ? [cwd, gitRoot] : [cwd];
 
-	const hasEditorConfig =
-		existsSync(join(cwd, '.editorconfig')) ||
-		(rootToCheck !== null && existsSync(join(rootToCheck, '.editorconfig')));
-
-	const hasVscode =
-		existsSync(join(cwd, '.vscode')) ||
-		(rootToCheck !== null && existsSync(join(rootToCheck, '.vscode')));
+	const hasEditorConfig = existsAtAnyRoot(roots, ['.editorconfig']);
+	const hasVscode = existsAtAnyRoot(roots, ['.vscode']);
 
 	const initialValues = DEFAULT_SELECTED_TOOLS.filter((tool) => {
-		if (tool === 'editorconfig' && hasEditorConfig) return false;
-		if (tool === 'vscode' && hasVscode) return false;
+		if (tool === 'editorconfig') return !hasEditorConfig;
+		if (tool === 'vscode') return !hasVscode;
 		return true;
 	});
 
-	const tools = await multiselect<ConfigTool>({
-		message: 'Select tools to configure',
-		options: [
-			{
-				value: 'editorconfig' as const,
-				label: 'EditorConfig',
-				...(hasEditorConfig && { hint: 'already exists' }),
-			},
-			{ value: 'oxc' as const, label: 'OXC (oxlint + oxfmt)' },
-			{
-				value: 'vscode' as const,
-				label: 'VSCode settings (.vscode/settings.json)',
-				...(hasVscode && { hint: 'already exists' }),
-			},
-		],
-		initialValues,
-		required: true,
-	});
-	if (isCancel(tools)) return exit();
+	return exitWhenCancelled(
+		await multiselect<ConfigTool>({
+			message: 'Select tools to configure',
+			options: [
+				{
+					value: 'editorconfig',
+					label: 'EditorConfig',
+					...(hasEditorConfig && { hint: 'already exists' }),
+				},
+				{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
+				{
+					value: 'vscode',
+					label: 'VSCode settings (.vscode/settings.json)',
+					...(hasVscode && { hint: 'already exists' }),
+				},
+			],
+			initialValues,
+			required: true,
+		})
+	);
+}
 
-	await updatePkgJson();
-	await updateEditorConfig({ tools });
-	await updateOxc({ tools });
+async function main(): Promise<void> {
+	const cwd = process.cwd();
+
+	intro(color.blue(TOOLING_PACKAGE_NAME));
+	log.info(
+		`You are about to configure ${TOOLING_PACKAGE_NAME} in the current directory: ${color.green(cwd)}`
+	);
+
+	const shouldContinue = exitWhenCancelled(
+		await confirm({ message: 'Continue ?' })
+	);
+	if (!shouldContinue) return;
+
+	const tools = await promptTools(cwd);
+
+	const presetFlags = await promptPresetsForTools(tools, cwd);
+	const result: PromptResult = { tools, presetFlags };
+
+	await updateEditorConfig(result);
+	await updatePackageScripts(result);
+	await updateOxc(result);
 
 	log.success(
 		'All done. Make sure to install the dependencies with `pnpm install`.'
 	);
 }
 
-void main();
+main().catch((error: unknown) => {
+	log.error(error instanceof Error ? error.message : String(error));
+	process.exit(1);
+});
