@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.7.0](https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0) (2026-10-22)
+
+### ⚠ BREAKING CHANGES
+
+* **oxc:** minimalstuffPreset now returns the root config instead
+  of an extends entry, the *_IGNORE_PATTERNS exports and the perfectionist
+  option are removed. See "Migrating from 0.6" in the README.
+* Node >= 26 is required, along with oxlint >= 1.89.0,
+  oxfmt >= 0.74.0 and oxlint-tsgolint >= 7.0.2004.
+
+### Features
+
+* **cli:** pick presets, keep existing scripts and confirm overwrites ([f1a8a70](https://github.com/minimalstuff/tooling/commit/f1a8a709fcf20036abf44b09be9628fda29a1d72))
+* **knip:** add Knip preset and CLI support ([9d12043](https://github.com/minimalstuff/tooling/commit/9d1204375ebc2b1a0dc81d4a9e6c5e59be2b1153))
+* **oxc:** return the root config from presets ([014e364](https://github.com/minimalstuff/tooling/commit/014e364fce33d6e0b755a6ac5e6829503708905b))
+
+### Bug Fixes
+
+* **cli:** generate preset configs that pass oxfmt --check ([fd68e22](https://github.com/minimalstuff/tooling/commit/fd68e22a85facc116e0c5bdbda898b16a96ff84f))
+* **editorconfig:** indent YAML files with spaces ([0bea045](https://github.com/minimalstuff/tooling/commit/0bea0455817ae936e5affa85369e11b9099c3c64))
+
+### Miscellaneous Chores
+
+* migrate to Node 26, pnpm 12 and TypeScript 7 ([7463789](https://github.com/minimalstuff/tooling/commit/7463789574938c055b42bdc4627b9626a0938126))
+
 ## [0.6.0](https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0) (2026-05-11)
 
 ### Features
