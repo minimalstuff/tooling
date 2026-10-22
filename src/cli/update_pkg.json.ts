@@ -1,10 +1,9 @@
-import { join } from 'node:path';
 import * as p from '@clack/prompts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-import type { PromptResult } from './index.js';
-import { TOOLING_PACKAGE_NAME } from '../constants.js';
 import pkgJson from '../../package.json' with { type: 'json' };
+import { TOOLING_PACKAGE_NAME } from '../constants.js';
 
 type UserPackageJson = {
 	devDependencies?: Record<string, string>;
@@ -12,7 +11,7 @@ type UserPackageJson = {
 	[key: string]: unknown;
 };
 
-export async function updatePkgJson(_: PromptResult) {
+export async function updatePkgJson() {
 	const cwd = process.cwd();
 	const pathPackageJSON = join(cwd, 'package.json');
 	const raw = await readFile(pathPackageJSON, 'utf-8');

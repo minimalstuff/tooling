@@ -31,19 +31,20 @@
 		"provenance": true
 	},
 	"scripts": {
-		"lint": "oxlint --type-aware",
-		"lint:fix": "oxlint --type-aware --fix",
-		"format": "oxfmt --write . && oxlint --type-aware --fix",
-		"build": "tsdown",
-		"release": "release-it",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"format": "oxfmt && oxlint --fix",
+		"format:check": "oxfmt --check",
 		"typecheck": "tsc --noEmit",
-		"checks": "pnpm typecheck && pnpm lint && pnpm build"
+		"test": "vitest run",
+		"build": "tsdown",
+		"checks": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build",
+		"release": "release-it"
 	},
 	"dependencies": {
 		"@adonisjs/eslint-plugin": "^2.2.2",
 		"@antfu/install-pkg": "^2.1.0",
 		"@clack/prompts": "^1.8.1",
-		"eslint-plugin-perfectionist": "^5.13.0",
 		"jsonc-parser": "^3.3.1",
 		"picocolors": "^1.1.1"
 	},
@@ -55,7 +56,8 @@
 		"oxlint-tsgolint": "^7.0.2004",
 		"release-it": "^21.1.1",
 		"tsdown": "^0.23.1",
-		"typescript": "^7.0.2"
+		"typescript": "^7.0.2",
+		"vitest": "^5.0.5"
 	},
 	"peerDependencies": {
 		"oxfmt": ">=0.74.0",

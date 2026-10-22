@@ -1,158 +1,153 @@
+# @minimalstuff/tooling
+
 ## Features
 
-- Shared presets for [OXC](https://oxc.rs/) tools (oxlint + oxfmt)
-- TypeScript configuration presets
+- [OXC](https://oxc.rs/) presets: oxlint and oxfmt
+- EditorConfig preset
 - CLI for quick project setup
 
-## Usage
+## Requirements
+
+- Node >= 26
+- `oxlint`, `oxfmt` and `oxlint-tsgolint` (optional peer dependencies, for the OXC presets)
 
 > [!IMPORTANT]
 > New/updated rules will not be considered as breaking changes. Only API changes will be considered as breaking changes.
 
-### CLI installation
+## Setup
 
-Just run this command in your project root directory:
+### CLI
+
+Run this command in your project root directory:
 
 ```bash
 pnpm dlx @minimalstuff/tooling@latest
 ```
 
+The CLI lets you pick the tools to set up: EditorConfig, OXC and VSCode settings.
+
 ### Manual install
 
 ```bash
-pnpm add -D oxlint oxfmt @minimalstuff/tooling
+pnpm add -D oxlint oxfmt oxlint-tsgolint @minimalstuff/tooling
 ```
 
-### OXC (oxlint + oxfmt)
-
-#### oxlint
+## oxlint
 
 ```ts
 // oxlint.config.ts
-import { defineConfig } from 'oxlint';
 import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';
 
-export default defineConfig({
-	extends: [minimalstuffPreset()],
-});
-```
-
-Options:
-
-| Option          | Type      | Default | Description                             |
-| --------------- | --------- | ------- | --------------------------------------- |
-| `react`         | `boolean` | `false` | Enable React-specific oxlint plugins    |
-| `adonisjs`      | `boolean` | `false` | Enable AdonisJS-specific rules          |
-| `perfectionist` | `boolean` | `true`  | Enable import sorting via perfectionist |
-
-```ts
-import {
-	ADONISJS_DEFAULT_IGNORE_PATTERNS,
-	minimalstuffPreset,
-} from '@minimalstuff/tooling/oxc/lint';
-
-export default defineConfig({
-	ignorePatterns: [...ADONISJS_DEFAULT_IGNORE_PATTERNS, 'tmp/**'],
-	extends: [
-		minimalstuffPreset({ react: true, adonisjs: true, perfectionist: true }),
-	],
+export default minimalstuffPreset({
+	react: true,
+	ignorePatterns: ['tmp/**'],
 	rules: {
-		'no-unused-vars': 'error',
+		'no-console': 'warn',
 	},
 });
 ```
 
-#### oxfmt
+`minimalstuffPreset` returns the root config. Any oxlint option (`rules`, `overrides`, `plugins`, `extends`, ...) can be passed next to the preset options:
+
+| Option     | Type      | Default | Enables                                                                                                   |
+| ---------- | --------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `react`    | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                 |
+| `adonisjs` | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns |
+| `vitest`   | `boolean` | `false` | `vitest` plugin                                                                                           |
+
+With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
+
+The base preset enables the `typescript`, `unicorn` and `oxc` plugins, the `correctness` category as `error`, and type-aware linting with type checking (`typeAware`, `typeCheck`) with a set of strict `typescript/*` rules.
+
+### Merge semantics
+
+- `rules`: yours override the preset's
+- `overrides`: yours come after the preset's
+- `plugins`, `jsPlugins`: yours are added to the preset's
+- `extends`: yours come after the preset's
+- `ignorePatterns`: the defaults are kept and yours are appended
+
+### Default ignore patterns
+
+- Always: `**/node_modules/**`, `**/dist/**`, `**/build/**`, `**/routeTree.gen.ts`, `**/*.yml`, `**/*.yaml`
+- With `adonisjs`: `**/.adonisjs/**`, `**/bin/*`, `**/database/schema.ts`
+
+## oxfmt
 
 ```ts
 // oxfmt.config.ts
 import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/fmt';
 
-export default minimalstuffPreset();
+export default minimalstuffPreset({ printWidth: 100 });
 ```
 
-You can override any option:
+Defaults: `printWidth: 80`, `tabWidth: 2`, `useTabs: true`, `semi: true`, `singleQuote: true`, `quoteProps: 'as-needed'`, `bracketSpacing: true`, `arrowParens: 'always'`, `trailingComma: 'es5'`, `htmlWhitespaceSensitivity: 'ignore'`.
 
-```ts
-export default minimalstuffPreset({ printWidth: 120, semi: true });
+Imports are sorted natively with `sortImports`, alphabetically, in three groups separated by a blank line: side effects, then `builtin` and `external`, then `@/` and `~/` internal imports and relative imports.
+
+| Option     | Type      | Default | Description                      |
+| ---------- | --------- | ------- | -------------------------------- |
+| `adonisjs` | `boolean` | `false` | Add the AdonisJS ignore patterns |
+
+Any other oxfmt option overrides the defaults. `ignorePatterns` are appended to the defaults (the oxlint ones plus `**/CHANGELOG.md`), never replaced.
+
+## Migrating from 0.6
+
+In 0.x a minor bump is breaking, so `^0.6.0` never resolves to 0.7: upgrade explicitly.
+
+```bash
+pnpm add -D @minimalstuff/tooling@^0.7.0 oxlint@latest oxfmt@latest oxlint-tsgolint@latest
 ```
 
-For Adonis projects, you can extend ignore patterns:
+Requirements changed:
+
+- Node >= 26.
+- Peers: `oxlint >= 1.89.0`, `oxfmt >= 0.74.0`, `oxlint-tsgolint >= 7.0.2004`.
+
+oxlint: the preset now returns the root config instead of being passed to `extends`.
 
 ```ts
-import {
-	ADONISJS_DEFAULT_IGNORE_PATTERNS,
-	minimalstuffPreset,
-	OXFMT_DEFAULT_IGNORE_PATTERNS,
-} from '@minimalstuff/tooling/oxc/fmt';
+// before
+export default defineConfig({
+	ignorePatterns: [...ADONISJS_DEFAULT_IGNORE_PATTERNS, 'tmp/**'],
+	extends: [minimalstuffPreset({ react: true, adonisjs: true })],
+	rules: { 'no-console': 'warn' },
+});
 
+// after
+export default minimalstuffPreset({
+	react: true,
+	adonisjs: true,
+	ignorePatterns: ['tmp/**'],
+	rules: { 'no-console': 'warn' },
+});
+```
+
+oxfmt: `OXFMT_DEFAULT_IGNORE_PATTERNS` and `ADONISJS_DEFAULT_IGNORE_PATTERNS` are no longer exported.
+
+```ts
+// before
 export default minimalstuffPreset({
 	ignorePatterns: [
 		...OXFMT_DEFAULT_IGNORE_PATTERNS,
 		...ADONISJS_DEFAULT_IGNORE_PATTERNS,
 	],
 });
+
+// after
+export default minimalstuffPreset({ adonisjs: true });
 ```
 
-Defaults: `printWidth: 100`, `semi: false`, `singleQuote: true`, `trailingComma: 'all'`, `arrowParens: 'avoid'`.
+Other changes:
 
-#### Scripts
+- The `perfectionist` option is removed. Imports are now sorted alphabetically by oxfmt: run `pnpm format` once.
+- Remove the ignore patterns that are now defaults from your configs.
+- The `eslint-plugin-perfectionist` dependency is no longer needed.
+- Correctness rules are now errors and new type-aware rules are enabled (see [oxlint](#oxlint)): `pnpm lint` may fail where it passed before.
 
-```json
-{
-	"scripts": {
-		"lint": "oxlint",
-		"lint:fix": "oxlint --fix",
-		"format": "oxfmt --write ."
-	}
-}
-```
+## Publishing
 
-### Tsconfig
-
-Node (ESM):
-
-```json
-{
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
-}
-```
-
-Node Next (ESM + `ts` extensions):
-
-```json
-{
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.node-next",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
-}
-```
-
-React (TSX, bundler resolution):
-
-```json
-{
-	"extends": "@minimalstuff/tooling/tsconfigs/tsconfig.react",
-	"compilerOptions": {
-		"rootDir": "./",
-		"outDir": "./build"
-	}
-}
-```
-
-### Prerequisites
-
-1. **NPM token**
-   Create an automation token at [npmjs.com/access-tokens](https://www.npmjs.com/access-tokens) (scope: package publish for `@minimalstuff/ui`).
-
-2. **Repository secret**
-   In the repo: **Settings → Secrets and variables → Actions**. Add a secret named `NPM_TOKEN` with the token value.
+Add a repository secret named `NPM_TOKEN` (**Settings > Secrets and variables > Actions**) holding an automation token from [npmjs.com/access-tokens](https://www.npmjs.com/access-tokens) with publish rights on `@minimalstuff/tooling`.
 
 ---
 

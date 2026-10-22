@@ -1,7 +1,7 @@
-import { join } from 'node:path';
 import * as p from '@clack/prompts';
-import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { PromptResult } from './index.js';
 

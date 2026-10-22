@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-import color from 'picocolors';
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import {
 	cancel,
 	confirm,
@@ -11,11 +8,14 @@ import {
 	log,
 	multiselect,
 } from '@clack/prompts';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import color from 'picocolors';
 
-import { updateOxc } from './update_oxc.js';
-import { updatePkgJson } from './update_pkg.json.js';
 import { TOOLING_PACKAGE_NAME } from '../constants.js';
 import { updateEditorConfig } from './update_editorconfig.js';
+import { updateOxc } from './update_oxc.js';
+import { updatePkgJson } from './update_pkg.json.js';
 
 export type ConfigTool = 'editorconfig' | 'oxc' | 'vscode';
 
@@ -95,7 +95,7 @@ async function main() {
 	});
 	if (isCancel(tools)) return exit();
 
-	await updatePkgJson({ tools });
+	await updatePkgJson();
 	await updateEditorConfig({ tools });
 	await updateOxc({ tools });
 

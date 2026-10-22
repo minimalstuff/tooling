@@ -1,51 +1,62 @@
-import { type DummyRuleMap, type OxlintConfig, defineConfig } from 'oxlint';
+import { type OxlintConfig, defineConfig } from 'oxlint';
 
-import { IGNORE_PATTERNS } from './shared.ts';
+import { ADONISJS_IGNORE_PATTERNS, COMMON_IGNORE_PATTERNS } from './shared.ts';
 
-export const ADONISJS_DEFAULT_IGNORE_PATTERNS = [
-	'.adonisjs/**',
-	'pnpm-*.yaml',
-	'bin/*',
-];
+const INERTIA_FRONTEND_FILES = ['**/inertia/**/*.{ts,tsx}'];
 
-const STRICT_TYPE_AWARE_RULES = {
-	'typescript/await-thenable': 'error',
-	'typescript/no-floating-promises': 'error',
-	'typescript/no-misused-promises': 'error',
-	'typescript/no-unnecessary-condition': 'off',
-	'typescript/no-unnecessary-type-assertion': 'error',
-	'typescript/no-unsafe-argument': 'off',
-	'typescript/no-unsafe-assignment': 'off',
-	'typescript/no-unsafe-call': 'off',
-	'typescript/no-unsafe-member-access': 'off',
-	'typescript/no-unsafe-return': 'off',
-	'typescript/prefer-nullish-coalescing': 'error',
-	'typescript/prefer-optional-chain': 'error',
-	'typescript/strict-boolean-expressions': 'off',
-	'typescript/switch-exhaustiveness-check': 'off',
-};
-
-interface MinimalstuffOxlintConfig {
-	adonisjs?: boolean;
-	perfectionist?: boolean;
+export interface MinimalstuffOxlintOptions extends OxlintConfig {
+	/** Enable React rules (hooks, fast refresh) and accessibility checks. */
 	react?: boolean;
+	/** Enable AdonisJS rules and ignore patterns. */
+	adonisjs?: boolean;
+	/** Enable the vitest plugin. */
+	vitest?: boolean;
 }
 
-function reactPreset() {
+function createBasePreset(): OxlintConfig {
 	return defineConfig({
-		plugins: ['react', 'react-perf'],
-		rules: {},
+		plugins: ['typescript', 'unicorn', 'oxc'],
+		categories: { correctness: 'error' },
+		options: { typeAware: true, typeCheck: true },
+		rules: {
+			'typescript/await-thenable': 'error',
+			'typescript/no-floating-promises': 'error',
+			'typescript/no-misused-promises': 'error',
+			'typescript/no-unnecessary-type-assertion': 'error',
+			'typescript/prefer-nullish-coalescing': 'error',
+			'typescript/prefer-optional-chain': 'error',
+			'typescript/switch-exhaustiveness-check': 'error',
+			'typescript/only-throw-error': 'error',
+			'typescript/return-await': 'error',
+			'typescript/prefer-promise-reject-errors': 'error',
+			'typescript/consistent-type-imports': 'error',
+			'typescript/no-deprecated': 'warn',
+		},
 	});
 }
 
-function adonisjsPreset() {
+function createReactPreset(): OxlintConfig {
+	return defineConfig({
+		plugins: ['react', 'jsx-a11y'],
+		rules: {
+			'react/rules-of-hooks': 'error',
+			'react/only-export-components': ['warn', { allowConstantExport: true }],
+		},
+	});
+}
+
+function createVitestPreset(): OxlintConfig {
+	return defineConfig({ plugins: ['vitest'] });
+}
+
+function createAdonisjsPreset(): OxlintConfig {
 	return defineConfig({
 		jsPlugins: ['@adonisjs/eslint-plugin'],
 		rules: {
 			'@adonisjs/prefer-lazy-controller-import': 'error',
 			'@adonisjs/prefer-lazy-listener-import': 'error',
 			'typescript/triple-slash-reference': 'off',
-			'@typescript-eslint/no-floating-promises': [
+			'typescript/no-floating-promises': [
 				'error',
 				{
 					allowForKnownSafePromises: [
@@ -75,60 +86,66 @@ function adonisjsPreset() {
 	});
 }
 
-function perfectionistPreset() {
+function createInertiaPreset(): OxlintConfig {
 	return defineConfig({
-		jsPlugins: ['eslint-plugin-perfectionist'],
-		rules: {
-			'perfectionist/sort-imports': [
-				'error',
-				{
-					type: 'line-length',
-					order: 'asc',
-					internalPattern: ['^@/.*', '^~/.*'],
-					groups: [
-						['side-effect', 'side-effect-style'],
-						['builtin', 'external'],
-						[
-							'internal',
-							'subpath',
-							'parent',
-							'sibling',
-							'index',
-							'style',
-							'unknown',
-						],
-					],
+		overrides: [
+			{
+				files: INERTIA_FRONTEND_FILES,
+				rules: {
+					'@adonisjs/no-backend-import-in-frontend': 'error',
+					'@adonisjs/prefer-adonisjs-inertia-link': 'error',
+					'@adonisjs/prefer-adonisjs-inertia-form': 'error',
 				},
-			],
-		},
+			},
+		],
 	});
 }
 
-function defaultPreset() {
-	return defineConfig({
-		ignorePatterns: IGNORE_PATTERNS,
-		plugins: ['typescript', 'node', 'eslint', 'oxc'],
-		rules: { ...STRICT_TYPE_AWARE_RULES } as DummyRuleMap,
-		options: {
-			typeAware: true,
-			typeCheck: true,
-		},
-	});
+function createPresets(options: {
+	react: boolean;
+	adonisjs: boolean;
+	vitest: boolean;
+}): OxlintConfig[] {
+	const presets = [createBasePreset()];
+	if (options.react) presets.push(createReactPreset());
+	if (options.vitest) presets.push(createVitestPreset());
+	if (options.adonisjs) presets.push(createAdonisjsPreset());
+	if (options.adonisjs && options.react) presets.push(createInertiaPreset());
+	return presets;
 }
 
-export function minimalstuffPreset(config: MinimalstuffOxlintConfig = {}) {
-	const normalizedConfig: MinimalstuffOxlintConfig = {
-		perfectionist: true,
-		...config,
-	};
+function createIgnorePatterns(
+	isAdonisjsEnabled: boolean,
+	userIgnorePatterns: readonly string[]
+): string[] {
+	return [
+		...COMMON_IGNORE_PATTERNS,
+		...(isAdonisjsEnabled ? ADONISJS_IGNORE_PATTERNS : []),
+		...userIgnorePatterns,
+	];
+}
+
+/**
+ * Builds the root oxlint config: preset parts are placed in `extends` before the
+ * user's own `extends`, while the user's keys sit on top (rules override,
+ * overrides and plugins are appended). `ignorePatterns` are always merged at the
+ * root because oxlint does not inherit them through `extends`.
+ */
+export function minimalstuffPreset(
+	options: MinimalstuffOxlintOptions = {}
+): OxlintConfig {
+	const {
+		react = false,
+		adonisjs = false,
+		vitest = false,
+		extends: userExtends = [],
+		ignorePatterns: userIgnorePatterns = [],
+		...userConfig
+	} = options;
 
 	return defineConfig({
-		extends: [
-			defaultPreset(),
-			normalizedConfig.react ? reactPreset() : null,
-			normalizedConfig.adonisjs ? adonisjsPreset() : null,
-			normalizedConfig.perfectionist ? perfectionistPreset() : null,
-		].filter(Boolean) as OxlintConfig[],
-		rules: {},
+		...userConfig,
+		extends: [...createPresets({ react, adonisjs, vitest }), ...userExtends],
+		ignorePatterns: createIgnorePatterns(adonisjs, userIgnorePatterns),
 	});
 }

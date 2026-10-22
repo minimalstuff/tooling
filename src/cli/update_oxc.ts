@@ -1,20 +1,20 @@
-import { join } from 'node:path';
-import * as p from '@clack/prompts';
-import { existsSync } from 'node:fs';
 import { installPackage } from '@antfu/install-pkg';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import * as p from '@clack/prompts';
 import {
 	type ParseError,
 	parse as parseJsonc,
 	printParseErrorCode,
 } from 'jsonc-parser';
+import { existsSync } from 'node:fs';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-import type { PromptResult } from './index.js';
 import {
 	OXC_FMT_IMPORT,
 	OXC_LINT_IMPORT,
 	TOOLING_PACKAGE_NAME,
 } from '../constants.js';
+import type { PromptResult } from './index.js';
 
 function buildOxlintConfigContent(options: {
 	adonisjs: boolean;
@@ -30,47 +30,22 @@ function buildOxlintConfigContent(options: {
 			? `minimalstuffPreset({ ${presetOptions.join(', ')} })`
 			: 'minimalstuffPreset()';
 
-	if (!options.adonisjs) {
-		return `import { defineConfig } from 'oxlint'
-import { minimalstuffPreset } from '${OXC_LINT_IMPORT}'
+	return `import { minimalstuffPreset } from '${OXC_LINT_IMPORT}'
 
-export default defineConfig({
-  extends: [${presetCall}],
-})
-`;
-	}
-
-	return `import { defineConfig } from 'oxlint'
-import {
-  ADONISJS_DEFAULT_IGNORE_PATTERNS,
-  minimalstuffPreset,
-} from '${OXC_LINT_IMPORT}'
-
-export default defineConfig({
-  ignorePatterns: [...ADONISJS_DEFAULT_IGNORE_PATTERNS],
-  extends: [${presetCall}],
-})
+export default ${presetCall}
 `;
 }
 
-const oxfmtConfigContent = `import { minimalstuffPreset } from '${OXC_FMT_IMPORT}'
+function buildOxfmtConfigContent(options: { adonisjs: boolean }) {
+	const presetCall = options.adonisjs
+		? 'minimalstuffPreset({ adonisjs: true })'
+		: 'minimalstuffPreset()';
 
-export default minimalstuffPreset()
+	return `import { minimalstuffPreset } from '${OXC_FMT_IMPORT}'
+
+export default ${presetCall}
 `;
-
-const oxfmtAdonisConfigContent = `import {
-	ADONISJS_DEFAULT_IGNORE_PATTERNS,
-	minimalstuffPreset,
-	OXFMT_DEFAULT_IGNORE_PATTERNS,
-} from '${OXC_FMT_IMPORT}'
-
-export default minimalstuffPreset({
-	ignorePatterns: [
-		...OXFMT_DEFAULT_IGNORE_PATTERNS,
-		...ADONISJS_DEFAULT_IGNORE_PATTERNS,
-	],
-})
-`;
+}
 
 const vscodeSettings = {
 	'oxc.typeAware': true,
@@ -105,7 +80,7 @@ export async function updateOxc(result: PromptResult) {
 	);
 	await writeFile(
 		join(cwd, 'oxfmt.config.ts'),
-		projectType.adonisjs ? oxfmtAdonisConfigContent : oxfmtConfigContent
+		buildOxfmtConfigContent(projectType)
 	);
 
 	if (result.tools.includes('vscode')) await updateVscodeSettings(cwd);
