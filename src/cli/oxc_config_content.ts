@@ -11,13 +11,25 @@ const OXLINT_PRESET_ORDER: readonly PresetName[] = [
 	'vitest',
 ];
 
+const DISABLED_SUBPATH_IMPORTS_OPTION: PresetOption = {
+	key: 'subpathImports',
+	value: 'false',
+};
+
 function toPresetOptions(enabledNames: readonly PresetName[]): PresetOption[] {
 	return enabledNames.map((name) => ({ key: name, value: 'true' }));
 }
 
-export function buildOxlintConfigContent(flags: PresetFlags): string {
+export function buildOxlintConfigContent(
+	flags: PresetFlags,
+	hasSubpathImports: boolean
+): string {
 	const enabledNames = OXLINT_PRESET_ORDER.filter((name) => flags[name]);
-	return buildPresetConfigFile(OXC_LINT_IMPORT, toPresetOptions(enabledNames));
+	const options = [
+		...toPresetOptions(enabledNames),
+		...(hasSubpathImports ? [] : [DISABLED_SUBPATH_IMPORTS_OPTION]),
+	];
+	return buildPresetConfigFile(OXC_LINT_IMPORT, options);
 }
 
 export function buildOxfmtConfigContent(flags: PresetFlags): string {

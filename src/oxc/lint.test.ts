@@ -23,6 +23,10 @@ export function Component({ isOpen }: { isOpen: boolean }) {
 }
 `;
 
+const RELATIVE_IMPORT_SOURCE =
+	"import { a } from './a.ts';\n\nexport const b = a;\n";
+const ALLOWED_EXPORT_SOURCE = 'export const a = 1;\n';
+
 const AWAIT_IN_LOOP_SOURCE = `export async function run(items: string[]): Promise<void> {
 	for (const item of items) {
 		await Promise.resolve(item);
@@ -121,6 +125,26 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const config = minimalstuffPreset({ plugins: ['import'] });
 
 		expect(config.plugins).toEqual(['import']);
+	});
+
+	it('should restrict relative imports when no option is given', () => {
+		expect(collectRules(minimalstuffPreset())).toHaveProperty(
+			'no-restricted-imports'
+		);
+	});
+
+	it('should not restrict relative imports when subpathImports is false', () => {
+		const config = minimalstuffPreset({ subpathImports: false });
+
+		expect(collectRules(config)).not.toHaveProperty('no-restricted-imports');
+	});
+
+	it('should let a user no-restricted-imports rule win over the preset when both are defined', () => {
+		const config = minimalstuffPreset({
+			rules: { 'no-restricted-imports': 'off' },
+		});
+
+		expect(collectRules(config)).toHaveProperty('no-restricted-imports', 'off');
 	});
 
 	it('should not include react parts when react is disabled', () => {
@@ -315,6 +339,26 @@ describe('minimalstuffPreset (oxlint) with the oxlint binary', () => {
 			'src/a.ts': DEBUGGER_SOURCE,
 		});
 
+		expect(outcome.exitCode).toBe(0);
+	});
+
+	it('should report relative imports when subpathImports is not set', async () => {
+		const outcome = await lintFixture('{}', {
+			'src/a.ts': ALLOWED_EXPORT_SOURCE,
+			'src/b.ts': RELATIVE_IMPORT_SOURCE,
+		});
+
+		expect(outcome.exitCode).not.toBe(0);
+		expect(outcome.output).toContain('no-restricted-imports');
+	});
+
+	it('should not report relative imports when subpathImports is false', async () => {
+		const outcome = await lintFixture('{ subpathImports: false }', {
+			'src/a.ts': ALLOWED_EXPORT_SOURCE,
+			'src/b.ts': RELATIVE_IMPORT_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('no-restricted-imports');
 		expect(outcome.exitCode).toBe(0);
 	});
 });

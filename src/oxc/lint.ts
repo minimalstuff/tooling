@@ -7,6 +7,8 @@ import {
 
 const INERTIA_FRONTEND_FILES = ['**/inertia/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/tests/**'];
+const RELATIVE_IMPORT_MESSAGE =
+	'Use a subpath import (#folder/file.ts) instead of a relative path.';
 
 export interface MinimalstuffOxlintOptions extends OxlintConfig {
 	/** Enable React rules (hooks, fast refresh) and accessibility checks. */
@@ -15,6 +17,8 @@ export interface MinimalstuffOxlintOptions extends OxlintConfig {
 	adonisjs?: boolean;
 	/** Enable the vitest plugin. */
 	vitest?: boolean;
+	/** Report relative imports so code uses Node subpath imports (`#folder/file.ts`). Defaults to true. */
+	subpathImports?: boolean;
 }
 
 function createBasePreset(): OxlintConfig {
@@ -98,6 +102,21 @@ function createAdonisjsPreset(): OxlintConfig {
 	});
 }
 
+function createSubpathImportsPreset(): OxlintConfig {
+	return defineConfig({
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{ group: ['./*', '../*'], message: RELATIVE_IMPORT_MESSAGE },
+					],
+				},
+			],
+		},
+	});
+}
+
 function createInertiaPreset(): OxlintConfig {
 	return defineConfig({
 		overrides: [
@@ -117,12 +136,14 @@ function createPresets(options: {
 	react: boolean;
 	adonisjs: boolean;
 	vitest: boolean;
+	subpathImports: boolean;
 }): OxlintConfig[] {
 	const presets = [createBasePreset()];
 	if (options.react) presets.push(createReactPreset());
 	if (options.vitest) presets.push(createVitestPreset());
 	if (options.adonisjs) presets.push(createAdonisjsPreset());
 	if (options.adonisjs && options.react) presets.push(createInertiaPreset());
+	if (options.subpathImports) presets.push(createSubpathImportsPreset());
 	return presets;
 }
 
@@ -150,6 +171,7 @@ export function minimalstuffPreset(
 		react = false,
 		adonisjs = false,
 		vitest = false,
+		subpathImports = true,
 		extends: userExtends = [],
 		ignorePatterns: userIgnorePatterns = [],
 		...userConfig
@@ -157,7 +179,10 @@ export function minimalstuffPreset(
 
 	return defineConfig({
 		...userConfig,
-		extends: [...createPresets({ react, adonisjs, vitest }), ...userExtends],
+		extends: [
+			...createPresets({ react, adonisjs, vitest, subpathImports }),
+			...userExtends,
+		],
 		ignorePatterns: createIgnorePatterns(adonisjs, userIgnorePatterns),
 	});
 }

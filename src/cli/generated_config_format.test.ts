@@ -28,12 +28,16 @@ const LONG_WORKSPACE_PATHS = [
 ];
 
 const GENERATED_CONTENTS: ReadonlyArray<readonly [string, string]> = [
-	['oxlint without presets', buildOxlintConfigContent(NO_PRESETS)],
+	['oxlint without presets', buildOxlintConfigContent(NO_PRESETS, true)],
 	[
 		'oxlint with one preset',
-		buildOxlintConfigContent({ ...NO_PRESETS, react: true }),
+		buildOxlintConfigContent({ ...NO_PRESETS, react: true }, true),
 	],
-	['oxlint with all presets', buildOxlintConfigContent(ALL_PRESETS)],
+	['oxlint with all presets', buildOxlintConfigContent(ALL_PRESETS, true)],
+	[
+		'oxlint without subpath imports',
+		buildOxlintConfigContent(ALL_PRESETS, false),
+	],
 	['oxfmt without adonisjs', buildOxfmtConfigContent(NO_PRESETS)],
 	[
 		'oxfmt with adonisjs',

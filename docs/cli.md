@@ -28,6 +28,8 @@ In order:
 | `knip.ts`               | Knip is selected                      |
 | `.vscode/settings.json` | OXC and VS Code settings are selected |
 
+The generated `oxlint.config.ts` sets `subpathImports: false` when no `package.json` (root, `apps/*`, `packages/*`) declares subpath imports.
+
 The CLI warns when a conflicting `.oxlintrc.json`, `.oxlintrc.jsonc`, `.oxfmtrc.json` or `.oxfmtrc.jsonc` file exists, or when a Knip config file other than `knip.ts` exists (`knip.json`, `knip.jsonc`, `.knip.json`, `.knip.jsonc`, `knip.config.ts`).
 
 When `adonisjs` is kept, the generated `knip.ts` targets the root (`adonisjs: true`) or the workspaces (`apps/*`, `packages/*`) whose `package.json` has an `@adonisjs/*` dependency.

@@ -14,5 +14,6 @@ export interface PackageManifest {
 	devDependencies?: Record<string, string>;
 	peerDependencies?: Record<string, string>;
 	scripts?: Record<string, string>;
+	imports?: Record<string, unknown>;
 	[key: string]: unknown;
 }

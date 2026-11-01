@@ -16,6 +16,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 - The CLI installs all packages in one step at the end, after writing the config files. If the install fails, it prints the command to run yourself.
 - The CLI offers VS Code settings only when OXC is selected, since they configure the OXC extension.
 - The CLI exits with code 130 when cancelled, and with code 1 and a message when it is not run in an interactive terminal.
+- **Breaking:** the oxlint preset reports relative imports (`./`, `../`) by default, so code uses Node subpath imports (`#folder/file.ts`). Opt out with `subpathImports: false`. The CLI sets it when the project declares no subpath imports. See [Upgrade from 0.7 to 0.8](docs/migrating.md#upgrade-from-07-to-08).
 
 ### Fixed
 

@@ -12,6 +12,7 @@ pnpm add -D @minimalstuff/tooling@^0.8.0
 
 - AdonisJS projects (`adonisjs: true`) must install the plugin themselves: `pnpm add -D @adonisjs/eslint-plugin`. It is an optional peer dependency instead of a dependency of this package.
 - The base oxlint preset enables the `promise` plugin and the async rules listed in [oxlint preset](presets.md#oxlint-preset): the error-level ones may surface additional errors.
+- Relative imports are reported by default (`subpathImports`). Either declare `"imports": { "#*": "./src/*" }` in `package.json` and rewrite imports as `#folder/file.ts`, or opt out with `minimalstuffPreset({ subpathImports: false })`. The rule has no autofix.
 
 ## Upgrade from 0.6 to 0.7
 

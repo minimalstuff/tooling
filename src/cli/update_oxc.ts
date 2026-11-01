@@ -2,6 +2,7 @@ import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { detectSubpathImports } from '#cli/detect_presets.ts';
 import {
 	buildOxfmtConfigContent,
 	buildOxlintConfigContent,
@@ -32,11 +33,12 @@ export async function updateOxc(result: PromptResult): Promise<void> {
 	if (!result.tools.includes('oxc')) return;
 
 	const cwd = process.cwd();
+	const hasSubpathImports = await detectSubpathImports(cwd);
 
 	warnAboutConflictingConfigs(cwd);
 	await writeGeneratedFile(
 		join(cwd, OXLINT_CONFIG_FILE),
-		buildOxlintConfigContent(result.presetFlags)
+		buildOxlintConfigContent(result.presetFlags, hasSubpathImports)
 	);
 	await writeGeneratedFile(
 		join(cwd, OXFMT_CONFIG_FILE),

@@ -7,6 +7,7 @@ import {
 	detectAdonisjsWorkspacePaths,
 	detectPresetFlags,
 	findAdonisjsWorkspacePaths,
+	hasSubpathImports,
 	detectPresets,
 	toDetectedPresetNames,
 	toPresetFlags,
@@ -48,6 +49,24 @@ describe('detectPresetFlags', () => {
 			{ devDependencies: { vitest: '1' } },
 		]);
 		expect(flags).toEqual({ react: true, adonisjs: false, vitest: true });
+	});
+});
+
+describe('hasSubpathImports', () => {
+	it('should be true when a manifest declares a # import', () => {
+		expect(hasSubpathImports([{}, { imports: { '#*': './src/*' } }])).toBe(
+			true
+		);
+	});
+
+	it('should be false when no manifest has imports', () => {
+		expect(hasSubpathImports([{}])).toBe(false);
+	});
+
+	it('should be false when imports has no # key', () => {
+		expect(hasSubpathImports([{ imports: { lodash: './lodash.js' } }])).toBe(
+			false
+		);
 	});
 });
 

@@ -19,11 +19,12 @@ export default minimalstuffPreset({
 
 `minimalstuffPreset` returns the root config. Any oxlint option (`rules`, `overrides`, `plugins`, `extends`, ...) can be passed next to the preset options:
 
-| Option     | Type      | Default | Enables                                                                                                                                                                              |
-| ---------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `react`    | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                                                                                            |
-| `adonisjs` | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns (needs `@adonisjs/eslint-plugin` as a dev dependency, the CLI installs it) |
-| `vitest`   | `boolean` | `false` | `vitest` plugin                                                                                                                                                                      |
+| Option           | Type      | Default | Enables                                                                                                                                                                                                |
+| ---------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `react`          | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                                                                                                              |
+| `adonisjs`       | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns (needs `@adonisjs/eslint-plugin` as a dev dependency, the CLI installs it)                   |
+| `vitest`         | `boolean` | `false` | `vitest` plugin                                                                                                                                                                                        |
+| `subpathImports` | `boolean` | `true`  | `no-restricted-imports` on relative specifiers (`./*`, `../*`), so imports go through Node subpath imports (`"imports": { "#*": "./src/*" }` in `package.json`). Set `false` to allow relative imports |
 
 With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
 

@@ -17,6 +17,7 @@ const REACT_PACKAGES = [
 ];
 const VITEST_PACKAGES = ['vitest'];
 const ADONISJS_SCOPE_PREFIX = '@adonisjs/';
+const SUBPATH_IMPORT_PREFIX = '#';
 
 type DependencyNames = ReadonlySet<string>;
 
@@ -48,6 +49,16 @@ export function detectPresetFlags(
 		vitest: hasAnyOf(VITEST_PACKAGES),
 		adonisjs: [...names].some((name) => name.startsWith(ADONISJS_SCOPE_PREFIX)),
 	};
+}
+
+export function hasSubpathImports(
+	manifests: readonly PackageManifest[]
+): boolean {
+	return manifests.some(({ imports }) =>
+		Object.keys(imports ?? {}).some((key) =>
+			key.startsWith(SUBPATH_IMPORT_PREFIX)
+		)
+	);
 }
 
 export function toDetectedPresetNames(flags: PresetFlags): PresetName[] {
@@ -137,4 +148,9 @@ export async function detectAdonisjsWorkspacePaths(
 	cwd: string
 ): Promise<string[]> {
 	return findAdonisjsWorkspacePaths(await readWorkspaceManifests(cwd));
+}
+
+export async function detectSubpathImports(cwd: string): Promise<boolean> {
+	const workspaceManifests = await readWorkspaceManifests(cwd);
+	return hasSubpathImports(workspaceManifests.map(({ manifest }) => manifest));
 }
