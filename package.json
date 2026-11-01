@@ -40,6 +40,7 @@
 		"format:check": "oxfmt --check",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
+		"test:package": "vitest run --config vitest.package.config.ts",
 		"build": "tsdown",
 		"checks": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm test && pnpm build",
 		"release": "release-it"
