@@ -20,7 +20,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 ### Fixed
 
 - The AdonisJS oxlint rules load with strict pnpm (`hoist: false`).
-- The CLI escapes workspace paths written into the generated Knip config, so a directory name containing a quote or a backslash no longer breaks `knip.config.ts`.
+- The CLI escapes workspace paths written into the generated Knip config, so a directory name containing a quote or a backslash no longer breaks `knip.ts`.
 
 ## [0.7.0] - 2026-10-22
 
@@ -34,7 +34,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ### Changed
 
-- **Breaking:** `minimalstuffPreset` now returns the root oxlint config instead of an entry for `extends`. The `*_IGNORE_PATTERNS` exports and the `perfectionist` option are removed. See "Migrating from 0.6" in the README.
+- **Breaking:** `minimalstuffPreset` now returns the root oxlint config instead of an entry for `extends`. The `*_IGNORE_PATTERNS` exports and the `perfectionist` option are removed. See [Upgrade from 0.6 to 0.7](docs/migrating.md#upgrade-from-06-to-07).
 - **Breaking:** Node >= 26 is required, along with oxlint >= 1.89.0, oxfmt >= 0.74.0 and oxlint-tsgolint >= 7.0.2004.
 - **Breaking:** the oxlint preset reports the `correctness` category as errors, and `typescript/switch-exhaustiveness-check`, `typescript/only-throw-error`, `typescript/return-await`, `typescript/prefer-promise-reject-errors` and `typescript/consistent-type-imports` are errors.
 

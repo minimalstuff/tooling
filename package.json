@@ -10,6 +10,10 @@
 		"oxlint",
 		"react"
 	],
+	"homepage": "https://github.com/minimalstuff/tooling#readme",
+	"bugs": {
+		"url": "https://github.com/minimalstuff/tooling/issues"
+	},
 	"license": "MIT",
 	"author": "Sonny93 <sonnyasdev@gmail.com>",
 	"repository": {
