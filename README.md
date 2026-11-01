@@ -204,6 +204,6 @@ Other changes:
 
 Publishing uses npm [trusted publishing](https://docs.npmjs.com/trusted-publishers) (OIDC), no token needed. On npmjs.com, `@minimalstuff/tooling` > **Settings > Trusted publishing** must list GitHub Actions with organization `minimalstuff`, repository `tooling` and workflow `publish.yml`. Publishing a GitHub release triggers the workflow.
 
----
+## License
 
-> source: https://github.com/Julien-R44/tooling
+[MIT](LICENSE)
