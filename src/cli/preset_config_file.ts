@@ -7,7 +7,10 @@ export interface PresetOption {
 	value: string | readonly string[];
 }
 
+const SAFE_SINGLE_QUOTED_TEXT = /^[^'\\\p{Cc}]*$/u;
+
 function quote(text: string): string {
+	if (!SAFE_SINGLE_QUOTED_TEXT.test(text)) return JSON.stringify(text);
 	return `'${text}'`;
 }
 

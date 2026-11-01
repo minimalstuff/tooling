@@ -49,6 +49,10 @@ const GENERATED_CONTENTS: ReadonlyArray<readonly [string, string]> = [
 		'knip with workspace paths exceeding the print width',
 		buildKnipConfigContent(LONG_WORKSPACE_PATHS),
 	],
+	[
+		'knip with a workspace path containing a single quote',
+		buildKnipConfigContent(["apps/a'b"]),
+	],
 ];
 
 describe('generated preset config files', () => {

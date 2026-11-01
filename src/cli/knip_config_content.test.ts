@@ -56,4 +56,20 @@ describe('buildKnipConfigContent', () => {
 			"minimalstuffPreset({\n\tadonisjs: [\n\t\t'apps/customer-facing-webapp',\n\t\t'packages/internal-backend-api',\n\t\t'packages/background-workers',\n\t],\n});"
 		);
 	});
+
+	it('should double-quote a workspace path when it contains a single quote', () => {
+		expect(buildKnipConfigContent(["apps/a'b"])).toContain(
+			`adonisjs: ["apps/a'b"],`
+		);
+	});
+
+	it('should escape a workspace path when it contains a backslash or a newline', () => {
+		const expectedLine = `\tadonisjs: [${JSON.stringify('apps/a\\b\nc')}],`;
+
+		const lines = buildKnipConfigContent(['apps/a\\b\nc']).split('\n');
+
+		expect(lines.find((line) => line.startsWith('\tadonisjs:'))).toBe(
+			expectedLine
+		);
+	});
 });

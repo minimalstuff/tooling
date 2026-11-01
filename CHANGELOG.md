@@ -17,6 +17,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 ### Fixed
 
 - The AdonisJS oxlint rules load with strict pnpm (`hoist: false`).
+- The CLI escapes workspace paths written into the generated Knip config, so a directory name containing a quote or a backslash no longer breaks `knip.config.ts`.
 
 ## [0.7.0] - 2026-10-22
 
