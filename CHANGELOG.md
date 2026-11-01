@@ -16,7 +16,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 - The CLI installs all packages in one step at the end, after writing the config files. If the install fails, it prints the command to run yourself.
 - The CLI offers VS Code settings only when OXC is selected, since they configure the OXC extension.
 - The CLI exits with code 130 when cancelled, and with code 1 and a message when it is not run in an interactive terminal.
-- **Breaking:** the oxlint preset reports relative imports (`./`, `../`) by default, so code uses Node subpath imports (`#folder/file.ts`). Opt out with `subpathImports: false`. The CLI sets it when the project declares no subpath imports. See [Upgrade from 0.7 to 0.8](docs/migrating.md#upgrade-from-07-to-08).
+- **Breaking:** the oxlint preset reports relative imports (`./`, `../`) by default, so code uses Node subpath imports (`#folder/file.ts`). Opt out with `subpathImports: false`. The CLI sets it when the project declares no subpath imports. See [Upgrade from 0.7 to 0.8](https://github.com/minimalstuff/tooling/blob/main/docs/migrating.md#upgrade-from-07-to-08).
 
 ### Fixed
 
@@ -35,7 +35,7 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ### Changed
 
-- **Breaking:** `minimalstuffPreset` now returns the root oxlint config instead of an entry for `extends`. The `*_IGNORE_PATTERNS` exports and the `perfectionist` option are removed. See [Upgrade from 0.6 to 0.7](docs/migrating.md#upgrade-from-06-to-07).
+- **Breaking:** `minimalstuffPreset` now returns the root oxlint config instead of an entry for `extends`. The `*_IGNORE_PATTERNS` exports and the `perfectionist` option are removed. See [Upgrade from 0.6 to 0.7](https://github.com/minimalstuff/tooling/blob/main/docs/migrating.md#upgrade-from-06-to-07).
 - **Breaking:** Node >= 26 is required, along with oxlint >= 1.89.0, oxfmt >= 0.74.0 and oxlint-tsgolint >= 7.0.2004.
 - **Breaking:** the oxlint preset reports the `correctness` category as errors, and `typescript/switch-exhaustiveness-check`, `typescript/only-throw-error`, `typescript/return-await`, `typescript/prefer-promise-reject-errors` and `typescript/consistent-type-imports` are errors.
 
