@@ -11,9 +11,12 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ### Changed
 
-- **Breaking:** `@adonisjs/eslint-plugin` is now an optional peer dependency instead of a dependency of this package. AdonisJS projects (`adonisjs: true`) must install it themselves with `pnpm add -D @adonisjs/eslint-plugin`. With strict pnpm (`hoist: false`) the AdonisJS rules previously failed to load; they now load.
+- **Breaking:** `@adonisjs/eslint-plugin` is now an optional peer dependency instead of a dependency of this package. AdonisJS projects (`adonisjs: true`) must install it themselves with `pnpm add -D @adonisjs/eslint-plugin`.
 - **Breaking:** the base oxlint preset enables the `promise` plugin and new rules, so existing projects can see new lint results. `promise/param-names`, `promise/no-return-in-finally`, `promise/no-multiple-resolved`, `promise/no-new-statics` and `promise/valid-params` are errors. `no-await-in-loop` (off in test files) and `promise/no-nesting` are warnings.
-- Releases are published from a hardened pipeline with npm provenance.
+
+### Fixed
+
+- The AdonisJS oxlint rules load with strict pnpm (`hoist: false`).
 
 ## [0.7.0] - 2026-10-22
 
@@ -21,11 +24,15 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 - Knip preset (`@minimalstuff/tooling/knip`) and Knip support in the CLI.
 - The CLI lets you pick which presets to set up, keeps your existing scripts and asks before overwriting files.
+- `vitest` option in the oxlint preset, which enables the `vitest` plugin.
+- `adonisjs` option in the oxfmt preset, which ignores AdonisJS default paths.
+- The oxfmt preset sorts imports natively (`sortImports`), replacing perfectionist.
 
 ### Changed
 
 - **Breaking:** `minimalstuffPreset` now returns the root oxlint config instead of an entry for `extends`. The `*_IGNORE_PATTERNS` exports and the `perfectionist` option are removed. See "Migrating from 0.6" in the README.
 - **Breaking:** Node >= 26 is required, along with oxlint >= 1.89.0, oxfmt >= 0.74.0 and oxlint-tsgolint >= 7.0.2004.
+- **Breaking:** the oxlint preset reports the `correctness` category as errors, and `typescript/switch-exhaustiveness-check`, `typescript/only-throw-error`, `typescript/return-await`, `typescript/prefer-promise-reject-errors` and `typescript/consistent-type-imports` are errors.
 
 ### Fixed
 
@@ -37,6 +44,9 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 ### Added
 
 - The CLI can configure VS Code settings (`vscode` tool).
+
+### Changed
+
 - The CLI no longer pre-selects tools that already have a config file at the repository root.
 
 ## [0.5.0] - 2026-04-26
