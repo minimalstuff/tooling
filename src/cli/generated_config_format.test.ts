@@ -1,17 +1,17 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { buildKnipConfigContent } from '#cli/knip_config_content.ts';
+import {
+	buildOxfmtConfigContent,
+	buildOxlintConfigContent,
+} from '#cli/oxc_config_content.ts';
+import type { PresetFlags } from '#cli/types.ts';
 import {
 	FORMAT_PRESET_PATH,
 	createFixture,
 	runBinary,
 	type Fixture,
-} from '../oxc/test_utils.ts';
-import { buildKnipConfigContent } from './knip_config_content.ts';
-import {
-	buildOxfmtConfigContent,
-	buildOxlintConfigContent,
-} from './oxc_config_content.ts';
-import type { PresetFlags } from './types.ts';
+} from '#oxc/test_utils.ts';
 
 const GENERATED_FILE_NAME = 'generated.config.ts';
 const FORMATTER_CONFIG_NAME = 'oxfmt.config.ts';

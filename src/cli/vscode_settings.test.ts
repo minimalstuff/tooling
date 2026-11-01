@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	mergeVscodeSettings,
 	updateVscodeSettings,
-} from './vscode_settings.ts';
+} from '#cli/vscode_settings.ts';
 
 vi.mock('@clack/prompts', () => ({ log: { success: vi.fn<() => void>() } }));
 

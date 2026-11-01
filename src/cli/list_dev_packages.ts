@@ -1,6 +1,6 @@
-import { TOOLING_PACKAGE_NAME } from '../constants.ts';
-import { listOxcPackages } from './list_oxc_packages.ts';
-import type { PromptResult } from './types.ts';
+import { listOxcPackages } from '#cli/list_oxc_packages.ts';
+import type { PromptResult } from '#cli/types.ts';
+import { TOOLING_PACKAGE_NAME } from '#constants.ts';
 
 const KNIP_PACKAGES: readonly string[] = ['knip', TOOLING_PACKAGE_NAME];
 

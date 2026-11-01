@@ -4,7 +4,7 @@ import {
 	ADONISJS_IGNORE_PATTERNS,
 	COMMON_IGNORE_PATTERNS,
 	FORMAT_ONLY_IGNORE_PATTERNS,
-} from './shared.ts';
+} from '#oxc/shared.ts';
 
 const INTERNAL_IMPORT_PREFIXES = ['@/', '~/'];
 

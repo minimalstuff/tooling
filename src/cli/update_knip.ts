@@ -2,15 +2,15 @@ import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { KNIP_CONFIG_FILE_NAME, KNIP_CONFIG_FILE_NAMES } from '../constants.ts';
-import { detectAdonisjsWorkspacePaths } from './detect_presets.ts';
+import { detectAdonisjsWorkspacePaths } from '#cli/detect_presets.ts';
 import {
 	buildKnipConfigContent,
 	type KnipAdonisjsOption,
 	toKnipAdonisjsOption,
-} from './knip_config_content.ts';
-import type { PromptResult } from './types.ts';
-import { writeGeneratedFile } from './write_generated_file.ts';
+} from '#cli/knip_config_content.ts';
+import type { PromptResult } from '#cli/types.ts';
+import { writeGeneratedFile } from '#cli/write_generated_file.ts';
+import { KNIP_CONFIG_FILE_NAME, KNIP_CONFIG_FILE_NAMES } from '#constants.ts';
 
 function warnAboutConflictingConfigs(cwd: string): void {
 	const conflictingFileNames = KNIP_CONFIG_FILE_NAMES.filter(

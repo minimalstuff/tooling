@@ -1,6 +1,9 @@
 import { type OxlintConfig, defineConfig } from 'oxlint';
 
-import { ADONISJS_IGNORE_PATTERNS, COMMON_IGNORE_PATTERNS } from './shared.ts';
+import {
+	ADONISJS_IGNORE_PATTERNS,
+	COMMON_IGNORE_PATTERNS,
+} from '#oxc/shared.ts';
 
 const INERTIA_FRONTEND_FILES = ['**/inertia/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/tests/**'];

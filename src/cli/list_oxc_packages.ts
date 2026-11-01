@@ -1,5 +1,5 @@
-import { TOOLING_PACKAGE_NAME } from '../constants.ts';
-import type { PresetFlags } from './types.ts';
+import type { PresetFlags } from '#cli/types.ts';
+import { TOOLING_PACKAGE_NAME } from '#constants.ts';
 
 const BASE_OXC_PACKAGES: readonly string[] = [
 	'oxfmt',

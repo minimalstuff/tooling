@@ -1,6 +1,6 @@
 import type { Option } from '@clack/prompts';
 
-import type { ConfigTool } from './types.ts';
+import type { ConfigTool } from '#cli/types.ts';
 
 export interface ExistingConfigs {
 	readonly hasEditorConfig: boolean;

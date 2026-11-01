@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 
-import { readJsonDocument, writeJsonDocument } from './json_file.ts';
-import { mergeScripts, type ScriptsMerge } from './package_scripts.ts';
-import type { PackageManifest } from './types.ts';
+import { readJsonDocument, writeJsonDocument } from '#cli/json_file.ts';
+import { mergeScripts, type ScriptsMerge } from '#cli/package_scripts.ts';
+import type { PackageManifest } from '#cli/types.ts';
 
 export async function addMissingScripts(
 	cwd: string,

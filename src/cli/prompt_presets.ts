@@ -4,9 +4,9 @@ import {
 	detectPresets,
 	toDetectedPresetNames,
 	toPresetFlags,
-} from './detect_presets.ts';
-import { exitWhenCancelled } from './prompts.ts';
-import type { ConfigTool, PresetFlags, PresetName } from './types.ts';
+} from '#cli/detect_presets.ts';
+import { exitWhenCancelled } from '#cli/prompts.ts';
+import type { ConfigTool, PresetFlags, PresetName } from '#cli/types.ts';
 
 const TOOLS_USING_PRESETS: readonly ConfigTool[] = ['oxc', 'knip'];
 

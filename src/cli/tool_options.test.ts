@@ -5,7 +5,7 @@ import {
 	canConfigureVscode,
 	type ExistingConfigs,
 	selectInitialTools,
-} from './tool_options.ts';
+} from '#cli/tool_options.ts';
 
 const NOTHING_EXISTS: ExistingConfigs = {
 	hasEditorConfig: false,

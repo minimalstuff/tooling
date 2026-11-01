@@ -10,7 +10,7 @@ import {
 	detectPresets,
 	toDetectedPresetNames,
 	toPresetFlags,
-} from './detect_presets.ts';
+} from '#cli/detect_presets.ts';
 
 describe('detectPresetFlags', () => {
 	it('should detect nothing when there are no dependencies', () => {

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createFixture, runBinary, type Fixture } from '../oxc/test_utils.ts';
-import { ADONISJS_WORKSPACE_CONFIG } from './adonisjs_workspace.ts';
-import { minimalstuffPreset } from './knip.ts';
+import { ADONISJS_WORKSPACE_CONFIG } from '#knip/adonisjs_workspace.ts';
+import { minimalstuffPreset } from '#knip/knip.ts';
+import { createFixture, runBinary, type Fixture } from '#oxc/test_utils.ts';
 
 const WEBAPP_PATH = 'apps/webapp';
 const KNIP_CONFIG_FILE = 'knip.json';

@@ -26,6 +26,9 @@
 		"preset"
 	],
 	"type": "module",
+	"imports": {
+		"#*": "./src/*"
+	},
 	"exports": {
 		"./editorconfig": "./preset/.editorconfig",
 		"./oxc/lint": "./dist/oxc/lint.mjs",

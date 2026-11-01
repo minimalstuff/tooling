@@ -10,7 +10,7 @@ import {
 	readJsonDocument,
 	stringifyJson,
 	writeJsonDocument,
-} from './json_file.ts';
+} from '#cli/json_file.ts';
 
 describe('detectIndentation', () => {
 	it('should return a tab when the file is indented with tabs', () => {

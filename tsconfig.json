@@ -9,7 +9,7 @@
 		"allowUnusedLabels": false,
 		"exactOptionalPropertyTypes": true,
 		"allowImportingTsExtensions": true,
-		"rewriteRelativeImportExtensions": true,
+		"emitDeclarationOnly": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitAny": true,
 		"noImplicitOverride": true,

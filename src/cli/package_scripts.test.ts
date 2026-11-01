@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildScripts, mergeScripts } from './package_scripts.ts';
+import { buildScripts, mergeScripts } from '#cli/package_scripts.ts';
 
 const OXC_SCRIPTS = buildScripts(['oxc']);
 

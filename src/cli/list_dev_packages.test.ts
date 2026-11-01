@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { listDevPackages } from './list_dev_packages.ts';
-import type { ConfigTool, PromptResult } from './types.ts';
+import { listDevPackages } from '#cli/list_dev_packages.ts';
+import type { ConfigTool, PromptResult } from '#cli/types.ts';
 
 const NO_PRESETS = { react: false, adonisjs: false, vitest: false };
 

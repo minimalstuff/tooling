@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 
-import { exitWhenCancelled } from './prompts.ts';
+import { exitWhenCancelled } from '#cli/prompts.ts';
 
 export async function writeGeneratedFile(
 	filePath: string,

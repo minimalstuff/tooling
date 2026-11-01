@@ -2,18 +2,18 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { minimalstuffPreset } from './fmt.ts';
+import { minimalstuffPreset } from '#oxc/fmt.ts';
 import {
 	ADONISJS_IGNORE_PATTERNS,
 	COMMON_IGNORE_PATTERNS,
 	FORMAT_ONLY_IGNORE_PATTERNS,
-} from './shared.ts';
+} from '#oxc/shared.ts';
 import {
 	FORMAT_PRESET_PATH,
 	createFixture,
 	runBinary,
 	type Fixture,
-} from './test_utils.ts';
+} from '#oxc/test_utils.ts';
 
 const UNSORTED_IMPORTS_SOURCE = `import { b } from './b.ts';
 import { z } from 'zod';

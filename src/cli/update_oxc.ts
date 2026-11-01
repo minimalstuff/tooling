@@ -5,10 +5,10 @@ import { join } from 'node:path';
 import {
 	buildOxfmtConfigContent,
 	buildOxlintConfigContent,
-} from './oxc_config_content.ts';
-import type { PromptResult } from './types.ts';
-import { updateVscodeSettings } from './vscode_settings.ts';
-import { writeGeneratedFile } from './write_generated_file.ts';
+} from '#cli/oxc_config_content.ts';
+import type { PromptResult } from '#cli/types.ts';
+import { updateVscodeSettings } from '#cli/vscode_settings.ts';
+import { writeGeneratedFile } from '#cli/write_generated_file.ts';
 
 const OXLINT_CONFIG_FILE = 'oxlint.config.ts';
 const OXFMT_CONFIG_FILE = 'oxfmt.config.ts';

@@ -1,6 +1,6 @@
 import type { KnipConfiguration, WorkspaceProjectConfig } from 'knip';
 
-import { ADONISJS_WORKSPACE_CONFIG } from './adonisjs_workspace.ts';
+import { ADONISJS_WORKSPACE_CONFIG } from '#knip/adonisjs_workspace.ts';
 
 export interface MinimalstuffKnipOptions extends KnipConfiguration {
 	/**

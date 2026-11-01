@@ -1,9 +1,9 @@
-import { OXC_FMT_IMPORT, OXC_LINT_IMPORT } from '../constants.ts';
 import {
 	buildPresetConfigFile,
 	type PresetOption,
-} from './preset_config_file.ts';
-import type { PresetFlags, PresetName } from './types.ts';
+} from '#cli/preset_config_file.ts';
+import type { PresetFlags, PresetName } from '#cli/types.ts';
+import { OXC_FMT_IMPORT, OXC_LINT_IMPORT } from '#constants.ts';
 
 const OXLINT_PRESET_ORDER: readonly PresetName[] = [
 	'adonisjs',

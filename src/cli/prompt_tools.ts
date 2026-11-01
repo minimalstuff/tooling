@@ -2,15 +2,15 @@ import { confirm, multiselect } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { KNIP_CONFIG_FILE_NAMES } from '../constants.ts';
-import { exitWhenCancelled } from './prompts.ts';
+import { exitWhenCancelled } from '#cli/prompts.ts';
 import {
 	buildToolOptions,
 	canConfigureVscode,
 	type ExistingConfigs,
 	selectInitialTools,
-} from './tool_options.ts';
-import type { ConfigTool } from './types.ts';
+} from '#cli/tool_options.ts';
+import type { ConfigTool } from '#cli/types.ts';
+import { KNIP_CONFIG_FILE_NAMES } from '#constants.ts';
 
 const VSCODE_CONFIRM_MESSAGE = 'Add OXC settings to .vscode/settings.json?';
 const VSCODE_EXISTING_NOTE = ' (it already exists, existing settings are kept)';

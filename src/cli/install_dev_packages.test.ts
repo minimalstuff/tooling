@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildDevInstallCommand } from './install_dev_packages.ts';
+import { buildDevInstallCommand } from '#cli/install_dev_packages.ts';
 
 const PACKAGE_NAMES = ['oxlint', 'knip'];
 

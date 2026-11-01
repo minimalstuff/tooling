@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { readJsonDocument } from './json_file.ts';
-import type { PackageManifest, PresetFlags, PresetName } from './types.ts';
+import { readJsonDocument } from '#cli/json_file.ts';
+import type { PackageManifest, PresetFlags, PresetName } from '#cli/types.ts';
 
 export const ROOT_WORKSPACE_PATH = '.';
 

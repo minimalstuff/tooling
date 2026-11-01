@@ -1,9 +1,9 @@
-import { KNIP_IMPORT } from '../constants.ts';
-import { ROOT_WORKSPACE_PATH } from './detect_presets.ts';
+import { ROOT_WORKSPACE_PATH } from '#cli/detect_presets.ts';
 import {
 	buildPresetConfigFile,
 	type PresetOption,
-} from './preset_config_file.ts';
+} from '#cli/preset_config_file.ts';
+import { KNIP_IMPORT } from '#constants.ts';
 
 export type KnipAdonisjsOption = true | readonly string[];
 

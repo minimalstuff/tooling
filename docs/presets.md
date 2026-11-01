@@ -59,7 +59,7 @@ export default minimalstuffPreset({ printWidth: 100 });
 
 Defaults: `printWidth: 80`, `tabWidth: 2`, `useTabs: true`, `semi: true`, `singleQuote: true`, `quoteProps: 'as-needed'`, `bracketSpacing: true`, `arrowParens: 'always'`, `trailingComma: 'es5'`, `htmlWhitespaceSensitivity: 'ignore'`.
 
-Imports are sorted natively with `sortImports`, alphabetically, in three groups separated by a blank line: side effects, then `builtin` and `external`, then `@/` and `~/` internal imports and relative imports.
+Imports are sorted natively with `sortImports`, alphabetically, in three groups separated by a blank line: side effects, then `builtin` and `external`, then internal imports (`@/`, `~/` and `#` subpath imports) and relative imports.
 
 | Option     | Type      | Default | Description                      |
 | ---------- | --------- | ------- | -------------------------------- |

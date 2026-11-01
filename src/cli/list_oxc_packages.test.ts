@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { listOxcPackages } from './list_oxc_packages.ts';
+import { listOxcPackages } from '#cli/list_oxc_packages.ts';
 
 const NO_PRESETS = { react: false, adonisjs: false, vitest: false };
 

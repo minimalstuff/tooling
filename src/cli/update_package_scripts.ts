@@ -1,8 +1,8 @@
 import { log } from '@clack/prompts';
 
-import { buildScripts } from './package_scripts.ts';
-import type { PromptResult } from './types.ts';
-import { addMissingScripts } from './update_package_json_scripts.ts';
+import { buildScripts } from '#cli/package_scripts.ts';
+import type { PromptResult } from '#cli/types.ts';
+import { addMissingScripts } from '#cli/update_package_json_scripts.ts';
 
 export async function updatePackageScripts(
 	result: PromptResult

@@ -1,3 +1,3 @@
-import { minimalstuffPreset } from './src/oxc/fmt.ts';
+import { minimalstuffPreset } from '#oxc/fmt.ts';
 
 export default minimalstuffPreset();

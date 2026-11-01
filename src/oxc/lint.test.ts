@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { minimalstuffPreset } from './lint.ts';
-import { ADONISJS_IGNORE_PATTERNS, COMMON_IGNORE_PATTERNS } from './shared.ts';
+import { minimalstuffPreset } from '#oxc/lint.ts';
+import {
+	ADONISJS_IGNORE_PATTERNS,
+	COMMON_IGNORE_PATTERNS,
+} from '#oxc/shared.ts';
 import {
 	LINT_PRESET_PATH,
 	createFixture,
 	runBinary,
 	type Fixture,
-} from './test_utils.ts';
+} from '#oxc/test_utils.ts';
 
 const DEBUGGER_SOURCE = 'debugger;\nexport const value = 1;\n';
 const HOOK_IN_CONDITION_SOURCE = `import { useState } from 'react';

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { buildScripts } from './package_scripts.ts';
-import { addMissingScripts } from './update_package_json_scripts.ts';
+import { buildScripts } from '#cli/package_scripts.ts';
+import { addMissingScripts } from '#cli/update_package_json_scripts.ts';
 
 const OXC_SCRIPTS = buildScripts(['oxc']);
 

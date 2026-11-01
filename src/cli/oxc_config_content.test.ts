@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildOxfmtConfigContent,
 	buildOxlintConfigContent,
-} from './oxc_config_content.ts';
-import type { PresetFlags } from './types.ts';
+} from '#cli/oxc_config_content.ts';
+import type { PresetFlags } from '#cli/types.ts';
 
 const NO_PRESETS: PresetFlags = {
 	react: false,

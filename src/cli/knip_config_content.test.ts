@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildKnipConfigContent,
 	toKnipAdonisjsOption,
-} from './knip_config_content.ts';
+} from '#cli/knip_config_content.ts';
 
 const LONG_WORKSPACE_PATHS = [
 	'apps/customer-facing-webapp',

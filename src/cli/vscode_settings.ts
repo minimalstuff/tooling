@@ -9,7 +9,7 @@ import {
 	type JsonObject,
 	parseJsonObject,
 	stringifyJson,
-} from './json_file.ts';
+} from '#cli/json_file.ts';
 
 const VSCODE_SETTINGS: Readonly<JsonObject> = {
 	'oxc.typeAware': true,
