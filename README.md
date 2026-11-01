@@ -14,7 +14,7 @@
 - `knip` >= 6.42.1 (optional peer dependency, for the Knip preset)
 
 > [!IMPORTANT]
-> New/updated rules will not be considered as breaking changes. Only API changes will be considered as breaking changes.
+> API changes are breaking changes. Before 1.0, new or stricter `error`-level rules are breaking too: they ship in a minor release, which `^0.x` ranges never pick up automatically. New `warn`-level rules and relaxed rules are not breaking.
 
 ## Setup
 
@@ -74,6 +74,12 @@ export default minimalstuffPreset({
 With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
 
 The base preset enables the `typescript`, `unicorn` and `oxc` plugins, the `correctness` category as `error`, and type-aware linting with type checking (`typeAware`, `typeCheck`) with a set of strict `typescript/*` rules.
+
+It also enables the `promise` plugin and these async rules:
+
+- `no-await-in-loop`: `warn`, turned off for test files (`**/*.{test,spec}.{ts,tsx,js,jsx}` and `**/tests/**`)
+- `error`: `promise/param-names`, `promise/no-return-in-finally`, `promise/no-multiple-resolved`, `promise/no-new-statics`, `promise/valid-params`
+- `warn`: `promise/no-nesting`
 
 ### Merge semantics
 

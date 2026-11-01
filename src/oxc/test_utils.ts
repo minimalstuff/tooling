@@ -58,11 +58,13 @@ async function writeFixtureFiles(
 	directory: string,
 	files: Record<string, string>
 ): Promise<void> {
-	for (const [relativePath, content] of Object.entries(files)) {
-		const filePath = join(directory, relativePath);
-		await mkdir(dirname(filePath), { recursive: true });
-		await writeFile(filePath, content);
-	}
+	await Promise.all(
+		Object.entries(files).map(async ([relativePath, content]) => {
+			const filePath = join(directory, relativePath);
+			await mkdir(dirname(filePath), { recursive: true });
+			await writeFile(filePath, content);
+		})
+	);
 }
 
 export async function runBinary(

@@ -20,6 +20,17 @@ export function Component({ isOpen }: { isOpen: boolean }) {
 }
 `;
 
+const AWAIT_IN_LOOP_SOURCE = `export async function run(items: string[]): Promise<void> {
+	for (const item of items) {
+		await Promise.resolve(item);
+	}
+}
+`;
+const WRONG_PARAM_NAMES_SOURCE = `export const pending = new Promise<void>((done) => {
+	done();
+});
+`;
+
 function collectRules(
 	config: ReturnType<typeof minimalstuffPreset>
 ): Record<string, unknown> {
@@ -92,7 +103,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides).toHaveLength(1);
+		expect(presetOverrides).toHaveLength(2);
 		expect(config.overrides).toEqual([userOverride]);
 	});
 
@@ -171,7 +182,8 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides).toEqual([]);
+		expect(presetOverrides).toHaveLength(1);
+		expect(presetOverrides[0]?.rules).toHaveProperty('no-await-in-loop', 'off');
 	});
 
 	it('should include inertia overrides when adonisjs and react are enabled', () => {
@@ -180,7 +192,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides[0]?.rules).toHaveProperty(
+		expect(presetOverrides[1]?.rules).toHaveProperty(
 			'@adonisjs/no-backend-import-in-frontend',
 			'error'
 		);
@@ -260,6 +272,39 @@ describe('minimalstuffPreset (oxlint) with the oxlint binary', () => {
 		});
 
 		expect(outcome.output).not.toContain('rules-of-hooks');
+	});
+
+	it('should report no-await-in-loop when an await sits in a loop of a source file', async () => {
+		const outcome = await lintFixture('{}', {
+			'src/a.ts': AWAIT_IN_LOOP_SOURCE,
+		});
+
+		expect(outcome.output).toContain('no-await-in-loop');
+	});
+
+	it('should not report no-await-in-loop when the file is a test file', async () => {
+		const outcome = await lintFixture('{}', {
+			'src/a.test.ts': AWAIT_IN_LOOP_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('no-await-in-loop');
+	});
+
+	it('should not report no-await-in-loop when the file is under a tests directory', async () => {
+		const outcome = await lintFixture('{}', {
+			'tests/a.ts': AWAIT_IN_LOOP_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('no-await-in-loop');
+	});
+
+	it('should report promise/param-names when the executor params are misnamed', async () => {
+		const outcome = await lintFixture('{}', {
+			'src/a.ts': WRONG_PARAM_NAMES_SOURCE,
+		});
+
+		expect(outcome.exitCode).not.toBe(0);
+		expect(outcome.output).toContain('param-names');
 	});
 
 	it('should let the user rule win when it turns off a correctness rule', async () => {

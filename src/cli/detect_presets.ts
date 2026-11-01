@@ -72,26 +72,32 @@ interface WorkspaceManifestLocation {
 	manifestPath: string;
 }
 
+async function listDirectoryManifestLocations(
+	cwd: string,
+	workspaceDirectory: string
+): Promise<WorkspaceManifestLocation[]> {
+	const directoryPath = join(cwd, workspaceDirectory);
+	if (!existsSync(directoryPath)) return [];
+
+	const entries = await readdir(directoryPath, { withFileTypes: true });
+	return entries
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => ({
+			workspacePath: `${workspaceDirectory}/${entry.name}`,
+			manifestPath: join(directoryPath, entry.name, 'package.json'),
+		}))
+		.filter(({ manifestPath }) => existsSync(manifestPath));
+}
+
 async function listWorkspaceManifestLocations(
 	cwd: string
 ): Promise<WorkspaceManifestLocation[]> {
-	const locations: WorkspaceManifestLocation[] = [];
-	for (const workspaceDirectory of WORKSPACE_DIRECTORIES) {
-		const directoryPath = join(cwd, workspaceDirectory);
-		if (!existsSync(directoryPath)) continue;
-
-		const entries = await readdir(directoryPath, { withFileTypes: true });
-		for (const entry of entries) {
-			if (!entry.isDirectory()) continue;
-			const manifestPath = join(directoryPath, entry.name, 'package.json');
-			if (!existsSync(manifestPath)) continue;
-			locations.push({
-				workspacePath: `${workspaceDirectory}/${entry.name}`,
-				manifestPath,
-			});
-		}
-	}
-	return locations;
+	const locationsPerDirectory = await Promise.all(
+		WORKSPACE_DIRECTORIES.map((workspaceDirectory) =>
+			listDirectoryManifestLocations(cwd, workspaceDirectory)
+		)
+	);
+	return locationsPerDirectory.flat();
 }
 
 async function readWorkspaceManifests(

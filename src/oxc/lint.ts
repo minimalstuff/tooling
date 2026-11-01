@@ -3,6 +3,7 @@ import { type OxlintConfig, defineConfig } from 'oxlint';
 import { ADONISJS_IGNORE_PATTERNS, COMMON_IGNORE_PATTERNS } from './shared.ts';
 
 const INERTIA_FRONTEND_FILES = ['**/inertia/**/*.{ts,tsx}'];
+const TEST_FILES = ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/tests/**'];
 
 export interface MinimalstuffOxlintOptions extends OxlintConfig {
 	/** Enable React rules (hooks, fast refresh) and accessibility checks. */
@@ -15,10 +16,17 @@ export interface MinimalstuffOxlintOptions extends OxlintConfig {
 
 function createBasePreset(): OxlintConfig {
 	return defineConfig({
-		plugins: ['typescript', 'unicorn', 'oxc'],
+		plugins: ['typescript', 'unicorn', 'oxc', 'promise'],
 		categories: { correctness: 'error' },
 		options: { typeAware: true, typeCheck: true },
 		rules: {
+			'no-await-in-loop': 'warn',
+			'promise/param-names': 'error',
+			'promise/no-return-in-finally': 'error',
+			'promise/no-multiple-resolved': 'error',
+			'promise/no-new-statics': 'error',
+			'promise/valid-params': 'error',
+			'promise/no-nesting': 'warn',
 			'typescript/await-thenable': 'error',
 			'typescript/no-floating-promises': 'error',
 			'typescript/no-misused-promises': 'error',
@@ -32,6 +40,7 @@ function createBasePreset(): OxlintConfig {
 			'typescript/consistent-type-imports': 'error',
 			'typescript/no-deprecated': 'warn',
 		},
+		overrides: [{ files: TEST_FILES, rules: { 'no-await-in-loop': 'off' } }],
 	});
 }
 
