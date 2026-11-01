@@ -93,6 +93,9 @@
 	},
 	"packageManager": "pnpm@12.16.1",
 	"release-it": {
+		"hooks": {
+			"before:init": "pnpm checks"
+		},
 		"git": {
 			"requireCleanWorkingDir": true,
 			"requireUpstream": true,
