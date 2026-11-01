@@ -45,13 +45,13 @@
 		"release": "release-it"
 	},
 	"dependencies": {
-		"@adonisjs/eslint-plugin": "^2.2.2",
 		"@antfu/install-pkg": "^2.1.0",
 		"@clack/prompts": "^1.8.1",
 		"jsonc-parser": "^3.3.1",
 		"picocolors": "^1.1.1"
 	},
 	"devDependencies": {
+		"@adonisjs/eslint-plugin": "^2.2.2",
 		"@release-it/conventional-changelog": "^12.0.2",
 		"@types/node": "^26.6.6",
 		"knip": "6.44.1",
@@ -64,12 +64,16 @@
 		"vitest": "^5.0.5"
 	},
 	"peerDependencies": {
+		"@adonisjs/eslint-plugin": "^2.2.2",
 		"knip": ">=6.42.1",
 		"oxfmt": ">=0.74.0",
 		"oxlint": ">=1.89.0",
 		"oxlint-tsgolint": ">=7.0.2004"
 	},
 	"peerDependenciesMeta": {
+		"@adonisjs/eslint-plugin": {
+			"optional": true
+		},
 		"knip": {
 			"optional": true
 		},

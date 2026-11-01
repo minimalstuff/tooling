@@ -12,6 +12,7 @@
 - Node >= 26
 - `oxlint`, `oxfmt` and `oxlint-tsgolint` (optional peer dependencies, for the OXC presets)
 - `knip` >= 6.42.1 (optional peer dependency, for the Knip preset)
+- `@adonisjs/eslint-plugin` ^2.2.2 (optional peer dependency, required when `adonisjs: true` is used in the oxlint preset; the CLI installs it)
 
 > [!IMPORTANT]
 > API changes are breaking changes. Before 1.0, new or stricter `error`-level rules are breaking too: they ship in a minor release, which `^0.x` ranges never pick up automatically. New `warn`-level rules and relaxed rules are not breaking.
@@ -44,6 +45,8 @@ With Knip and OXC selected, `check` also runs `pnpm knip` at the end. Knip alone
 
 ```bash
 pnpm add -D oxlint oxfmt oxlint-tsgolint @minimalstuff/tooling
+# optional, for the AdonisJS oxlint preset
+pnpm add -D @adonisjs/eslint-plugin
 # optional, for the Knip preset
 pnpm add -D knip
 ```
@@ -65,11 +68,11 @@ export default minimalstuffPreset({
 
 `minimalstuffPreset` returns the root config. Any oxlint option (`rules`, `overrides`, `plugins`, `extends`, ...) can be passed next to the preset options:
 
-| Option     | Type      | Default | Enables                                                                                                   |
-| ---------- | --------- | ------- | --------------------------------------------------------------------------------------------------------- |
-| `react`    | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                 |
-| `adonisjs` | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns |
-| `vitest`   | `boolean` | `false` | `vitest` plugin                                                                                           |
+| Option     | Type      | Default | Enables                                                                                                                                                                              |
+| ---------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `react`    | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                                                                                            |
+| `adonisjs` | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns (needs `@adonisjs/eslint-plugin` as a dev dependency, the CLI installs it) |
+| `vitest`   | `boolean` | `false` | `vitest` plugin                                                                                                                                                                      |
 
 With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
 
@@ -149,6 +152,17 @@ For the targeted workspace(s):
 - other keys (booleans, objects such as plugin configs): yours win
 
 With `adonisjs: true`, the preset is merged into the root keys. If you define `workspaces['.']` yourself, knip ignores the root keys: use `adonisjs: ['.']` instead. With a list of paths, the root keys are left untouched and each listed workspace gets the preset merged with its own `workspaces[path]` entry.
+
+## Migrating from 0.7
+
+In 0.x a minor bump is breaking, so `^0.7.0` never resolves to 0.8: upgrade explicitly.
+
+```bash
+pnpm add -D @minimalstuff/tooling@^0.8.0
+```
+
+- AdonisJS projects (`adonisjs: true`) must install the plugin themselves: `pnpm add -D @adonisjs/eslint-plugin`. It is now an optional peer dependency instead of a dependency of this package.
+- The base oxlint preset now enables the `promise` plugin and the async rules listed in [oxlint](#oxlint): the error-level ones may surface new errors.
 
 ## Migrating from 0.6
 

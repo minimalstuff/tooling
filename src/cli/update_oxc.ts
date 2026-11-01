@@ -3,7 +3,7 @@ import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { TOOLING_PACKAGE_NAME } from '../constants.ts';
+import { listOxcPackages } from './list_oxc_packages.ts';
 import {
 	buildOxfmtConfigContent,
 	buildOxlintConfigContent,
@@ -11,13 +11,6 @@ import {
 import type { PromptResult } from './types.ts';
 import { updateVscodeSettings } from './vscode_settings.ts';
 import { writeGeneratedFile } from './write_generated_file.ts';
-
-const OXC_PACKAGES = [
-	'oxfmt',
-	'oxlint',
-	'oxlint-tsgolint',
-	TOOLING_PACKAGE_NAME,
-];
 
 const OXLINT_CONFIG_FILE = 'oxlint.config.ts';
 const OXFMT_CONFIG_FILE = 'oxfmt.config.ts';
@@ -53,7 +46,7 @@ export async function updateOxc(result: PromptResult): Promise<void> {
 	);
 
 	if (result.tools.includes('vscode')) await updateVscodeSettings(cwd);
-	await installPackage(OXC_PACKAGES, { dev: true, cwd });
+	await installPackage(listOxcPackages(result.presetFlags), { dev: true, cwd });
 
 	log.success('OXC configured (oxlint + oxfmt)');
 }
