@@ -13,6 +13,9 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 - **Breaking:** `@adonisjs/eslint-plugin` is now an optional peer dependency instead of a dependency of this package. AdonisJS projects (`adonisjs: true`) must install it themselves with `pnpm add -D @adonisjs/eslint-plugin`.
 - **Breaking:** the base oxlint preset enables the `promise` plugin and new rules, so existing projects can see new lint results. `promise/param-names`, `promise/no-return-in-finally`, `promise/no-multiple-resolved`, `promise/no-new-statics` and `promise/valid-params` are errors. `no-await-in-loop` (off in test files) and `promise/no-nesting` are warnings.
+- The CLI installs all packages in one step at the end, after writing the config files. If the install fails, it prints the command to run yourself.
+- The CLI offers VS Code settings only when OXC is selected, since they configure the OXC extension.
+- The CLI exits with code 130 when cancelled, and with code 1 and a message when it is not run in an interactive terminal.
 
 ### Fixed
 

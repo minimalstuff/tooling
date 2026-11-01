@@ -1,13 +1,8 @@
-import { installPackage } from '@antfu/install-pkg';
 import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import {
-	KNIP_CONFIG_FILE_NAME,
-	KNIP_CONFIG_FILE_NAMES,
-	TOOLING_PACKAGE_NAME,
-} from '../constants.ts';
+import { KNIP_CONFIG_FILE_NAME, KNIP_CONFIG_FILE_NAMES } from '../constants.ts';
 import { detectAdonisjsWorkspacePaths } from './detect_presets.ts';
 import {
 	buildKnipConfigContent,
@@ -16,8 +11,6 @@ import {
 } from './knip_config_content.ts';
 import type { PromptResult } from './types.ts';
 import { writeGeneratedFile } from './write_generated_file.ts';
-
-const KNIP_PACKAGES = ['knip', TOOLING_PACKAGE_NAME];
 
 function warnAboutConflictingConfigs(cwd: string): void {
 	const conflictingFileNames = KNIP_CONFIG_FILE_NAMES.filter(
@@ -52,7 +45,6 @@ export async function updateKnip(result: PromptResult): Promise<void> {
 		join(cwd, KNIP_CONFIG_FILE_NAME),
 		buildKnipConfigContent(adonisjsOption)
 	);
-	await installPackage(KNIP_PACKAGES, { dev: true, cwd });
 
 	log.success('Knip configured');
 }

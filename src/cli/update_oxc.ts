@@ -1,9 +1,7 @@
-import { installPackage } from '@antfu/install-pkg';
 import { log } from '@clack/prompts';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { listOxcPackages } from './list_oxc_packages.ts';
 import {
 	buildOxfmtConfigContent,
 	buildOxlintConfigContent,
@@ -46,7 +44,6 @@ export async function updateOxc(result: PromptResult): Promise<void> {
 	);
 
 	if (result.tools.includes('vscode')) await updateVscodeSettings(cwd);
-	await installPackage(listOxcPackages(result.presetFlags), { dev: true, cwd });
 
 	log.success('OXC configured (oxlint + oxfmt)');
 }

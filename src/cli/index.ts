@@ -1,88 +1,34 @@
 #!/usr/bin/env node
 
-import { confirm, intro, log, multiselect } from '@clack/prompts';
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { confirm, intro, log, outro } from '@clack/prompts';
 import color from 'picocolors';
 
-import { KNIP_CONFIG_FILE_NAMES, TOOLING_PACKAGE_NAME } from '../constants.ts';
+import { TOOLING_PACKAGE_NAME } from '../constants.ts';
+import { installDevPackages } from './install_dev_packages.ts';
+import { listDevPackages } from './list_dev_packages.ts';
 import { promptPresetsForTools } from './prompt_presets.ts';
+import { promptTools } from './prompt_tools.ts';
 import { exitWhenCancelled } from './prompts.ts';
-import type { ConfigTool, PromptResult } from './types.ts';
+import type { PromptResult } from './types.ts';
 import { updateEditorConfig } from './update_editorconfig.ts';
 import { updateKnip } from './update_knip.ts';
 import { updateOxc } from './update_oxc.ts';
 import { updatePackageScripts } from './update_package_scripts.ts';
 
-const DEFAULT_SELECTED_TOOLS: ConfigTool[] = [
-	'editorconfig',
-	'oxc',
-	'knip',
-	'vscode',
-];
+const FAILURE_EXIT_CODE = 1;
 
-function findGitRoot(startDirectory: string): string | null {
-	let directory = startDirectory;
-	while (true) {
-		if (existsSync(join(directory, '.git'))) return directory;
-		const parent = dirname(directory);
-		if (parent === directory) return null;
-		directory = parent;
-	}
-}
+function exitWhenNotInteractive(): void {
+	if (process.stdin.isTTY) return;
 
-function existsAtAnyRoot(
-	roots: readonly string[],
-	entryNames: readonly string[]
-): boolean {
-	return roots.some((root) =>
-		entryNames.some((entryName) => existsSync(join(root, entryName)))
+	log.error(
+		'This setup asks questions and needs an interactive terminal. Run it again from a terminal.'
 	);
-}
-
-async function promptTools(cwd: string): Promise<ConfigTool[]> {
-	const gitRoot = findGitRoot(cwd);
-	const roots = gitRoot && gitRoot !== cwd ? [cwd, gitRoot] : [cwd];
-
-	const hasEditorConfig = existsAtAnyRoot(roots, ['.editorconfig']);
-	const hasVscode = existsAtAnyRoot(roots, ['.vscode']);
-	const hasKnip = existsAtAnyRoot(roots, KNIP_CONFIG_FILE_NAMES);
-
-	const initialValues = DEFAULT_SELECTED_TOOLS.filter((tool) => {
-		if (tool === 'editorconfig') return !hasEditorConfig;
-		if (tool === 'vscode') return !hasVscode;
-		if (tool === 'knip') return !hasKnip;
-		return true;
-	});
-
-	return exitWhenCancelled(
-		await multiselect<ConfigTool>({
-			message: 'Select tools to configure',
-			options: [
-				{
-					value: 'editorconfig',
-					label: 'EditorConfig',
-					...(hasEditorConfig && { hint: 'already exists' }),
-				},
-				{ value: 'oxc', label: 'OXC (oxlint + oxfmt)' },
-				{
-					value: 'knip',
-					label: 'Knip (unused files, exports, dependencies)',
-					...(hasKnip && { hint: 'already exists' }),
-				},
-				{
-					value: 'vscode',
-					label: 'VSCode settings (.vscode/settings.json)',
-					...(hasVscode && { hint: 'already exists' }),
-				},
-			],
-			initialValues,
-			required: true,
-		})
-	);
+	process.exit(FAILURE_EXIT_CODE);
 }
 
 async function main(): Promise<void> {
+	exitWhenNotInteractive();
+
 	const cwd = process.cwd();
 
 	intro(color.blue(TOOLING_PACKAGE_NAME));
@@ -91,9 +37,12 @@ async function main(): Promise<void> {
 	);
 
 	const shouldContinue = exitWhenCancelled(
-		await confirm({ message: 'Continue ?' })
+		await confirm({ message: 'Continue?' })
 	);
-	if (!shouldContinue) return;
+	if (!shouldContinue) {
+		outro('Nothing was changed.');
+		return;
+	}
 
 	const tools = await promptTools(cwd);
 
@@ -104,11 +53,13 @@ async function main(): Promise<void> {
 	await updatePackageScripts(result);
 	await updateOxc(result);
 	await updateKnip(result);
+	await installDevPackages(listDevPackages(result), cwd);
 
 	log.success('All done.');
 }
 
 main().catch((error: unknown) => {
 	log.error(error instanceof Error ? error.message : String(error));
-	process.exit(1);
+	log.info('Files written before the error are kept.');
+	process.exit(FAILURE_EXIT_CODE);
 });
