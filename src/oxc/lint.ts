@@ -6,6 +6,16 @@ import {
 } from '#oxc/shared.ts';
 
 const INERTIA_FRONTEND_FILES = ['**/inertia/**/*.{ts,tsx}'];
+/**
+ * AdonisJS server code receives dependencies through `@inject()` constructor
+ * injection, which relies on `emitDecoratorMetadata`: the injected class must be
+ * a value import, so `typescript/consistent-type-imports` must not rewrite it.
+ */
+const ADONISJS_INJECTION_FILES = [
+	'**/app/**',
+	'**/commands/**',
+	'**/providers/**',
+];
 const TEST_FILES = ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/tests/**'];
 const RELATIVE_IMPORT_MESSAGE =
 	'Use a subpath import (#folder/file.ts) instead of a relative path.';
@@ -99,6 +109,12 @@ function createAdonisjsPreset(): OxlintConfig {
 				},
 			],
 		},
+		overrides: [
+			{
+				files: ADONISJS_INJECTION_FILES,
+				rules: { 'typescript/consistent-type-imports': 'off' },
+			},
+		],
 	});
 }
 

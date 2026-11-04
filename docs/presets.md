@@ -26,6 +26,8 @@ export default minimalstuffPreset({
 | `vitest`         | `boolean` | `false` | `vitest` plugin                                                                                                                                                                                        |
 | `subpathImports` | `boolean` | `true`  | `no-restricted-imports` on relative specifiers (`./*`, `../*`), so imports go through Node subpath imports (`"imports": { "#*": "./src/*" }` in `package.json`). Set `false` to allow relative imports |
 
+With `adonisjs`, `typescript/consistent-type-imports` is off in `**/app/**`, `**/commands/**` and `**/providers/**`: `@inject()` constructor injection needs the injected class as a value import (`emitDecoratorMetadata`), and the rule's autofix would turn it into a type import and break injection at runtime.
+
 With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
 
 The base preset enables the `typescript`, `unicorn` and `oxc` plugins, the `correctness` category as `error`, and type-aware linting with type checking (`typeAware`, `typeCheck`) with a set of strict `typescript/*` rules.

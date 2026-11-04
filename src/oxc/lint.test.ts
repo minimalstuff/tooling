@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { minimalstuffPreset } from '#oxc/lint.ts';
@@ -26,6 +28,14 @@ export function Component({ isOpen }: { isOpen: boolean }) {
 const RELATIVE_IMPORT_SOURCE =
 	"import { a } from './a.ts';\n\nexport const b = a;\n";
 const ALLOWED_EXPORT_SOURCE = 'export const a = 1;\n';
+
+const INJECTED_SERVICE_SOURCE = 'export class CacheService {}\n';
+const INJECTED_CONTROLLER_SOURCE = `import { CacheService } from './cache_service.ts';
+
+export class ShowUserController {
+	constructor(protected cacheService: CacheService) {}
+}
+`;
 
 const AWAIT_IN_LOOP_SOURCE = `export async function run(items: string[]): Promise<void> {
 	for (const item of items) {
@@ -110,7 +120,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides).toHaveLength(2);
+		expect(presetOverrides).toHaveLength(3);
 		expect(config.overrides).toEqual([userOverride]);
 	});
 
@@ -209,8 +219,12 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides).toHaveLength(1);
+		expect(presetOverrides).toHaveLength(2);
 		expect(presetOverrides[0]?.rules).toHaveProperty('no-await-in-loop', 'off');
+		expect(presetOverrides[1]?.rules).toHaveProperty(
+			'typescript/consistent-type-imports',
+			'off'
+		);
 	});
 
 	it('should include inertia overrides when adonisjs and react are enabled', () => {
@@ -219,7 +233,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides[1]?.rules).toHaveProperty(
+		expect(presetOverrides[2]?.rules).toHaveProperty(
 			'@adonisjs/no-backend-import-in-frontend',
 			'error'
 		);
@@ -267,6 +281,61 @@ describe('minimalstuffPreset (oxlint) with the oxlint binary', () => {
 		});
 
 		expect(outcome.exitCode).not.toBe(0);
+	});
+
+	it('should not report consistent-type-imports in app when adonisjs is enabled', async () => {
+		const outcome = await lintFixture('{ adonisjs: true }', {
+			'app/cache_service.ts': INJECTED_SERVICE_SOURCE,
+			'app/show_user_controller.ts': INJECTED_CONTROLLER_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('consistent-type-imports');
+	});
+
+	it('should not report consistent-type-imports in a monorepo app when adonisjs is enabled', async () => {
+		const outcome = await lintFixture('{ adonisjs: true }', {
+			'apps/api/app/cache_service.ts': INJECTED_SERVICE_SOURCE,
+			'apps/api/app/show_user_controller.ts': INJECTED_CONTROLLER_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('consistent-type-imports');
+	});
+
+	it('should keep the value import when oxlint --fix runs in app with adonisjs enabled', async () => {
+		await lintFixture('{ adonisjs: true }', {
+			'app/cache_service.ts': INJECTED_SERVICE_SOURCE,
+			'app/show_user_controller.ts': INJECTED_CONTROLLER_SOURCE,
+		});
+		await runBinary('oxlint', fixture.directory, [
+			'-c',
+			'oxlint.config.ts',
+			'--fix',
+		]);
+
+		const content = await readFile(
+			join(fixture.directory, 'app/show_user_controller.ts'),
+			'utf8'
+		);
+		expect(content).toContain('import { CacheService }');
+		expect(content).not.toContain('import type');
+	});
+
+	it('should report consistent-type-imports outside the adonisjs server folders', async () => {
+		const outcome = await lintFixture('{ adonisjs: true }', {
+			'src/cache_service.ts': INJECTED_SERVICE_SOURCE,
+			'src/show_user_controller.ts': INJECTED_CONTROLLER_SOURCE,
+		});
+
+		expect(outcome.output).toContain('consistent-type-imports');
+	});
+
+	it('should report consistent-type-imports in app when adonisjs is disabled', async () => {
+		const outcome = await lintFixture('{}', {
+			'app/cache_service.ts': INJECTED_SERVICE_SOURCE,
+			'app/show_user_controller.ts': INJECTED_CONTROLLER_SOURCE,
+		});
+
+		expect(outcome.output).toContain('consistent-type-imports');
 	});
 
 	it('should not lint user ignored files when ignorePatterns is provided', async () => {

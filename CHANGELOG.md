@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Fixed
+
+- With `adonisjs: true`, `typescript/consistent-type-imports` is off in `app/`, `commands/` and `providers/`, so `oxlint --fix` no longer turns injected classes into type imports and breaks dependency injection.
+
 ## [0.8.0] - 2026-11-01
 
 ### Added
