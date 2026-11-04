@@ -4,6 +4,8 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-04
+
 ### Fixed
 
 - With `adonisjs: true`, `typescript/consistent-type-imports` is off in `app/`, `commands/` and `providers/`, so `oxlint --fix` no longer turns injected classes into type imports and breaks dependency injection.
@@ -120,7 +122,7 @@ No user-visible changes.
 
 - The framework preset targets React instead of Vue.
 
-[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.8.1...HEAD
 [0.7.0]: https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0
@@ -133,4 +135,5 @@ No user-visible changes.
 [0.1.1]: https://github.com/minimalstuff/tooling/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/minimalstuff/tooling/releases/tag/v0.1.0
 
+[0.8.1]: https://github.com/minimalstuff/tooling/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/minimalstuff/tooling/compare/v0.7.0...v0.8.0
