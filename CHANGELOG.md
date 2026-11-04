@@ -4,6 +4,8 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-04
+
 ### Fixed
 
 - With `react: true`, `react/only-export-components` is off in test files (`*.test.*`, `*.spec.*` and `tests/`), where Fast Refresh never applies, so test helpers that re-export a library next to a custom `render` are no longer flagged.
@@ -126,7 +128,7 @@ No user-visible changes.
 
 - The framework preset targets React instead of Vue.
 
-[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.8.2...HEAD
 [0.7.0]: https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0
@@ -139,5 +141,6 @@ No user-visible changes.
 [0.1.1]: https://github.com/minimalstuff/tooling/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/minimalstuff/tooling/releases/tag/v0.1.0
 
+[0.8.2]: https://github.com/minimalstuff/tooling/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/minimalstuff/tooling/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/minimalstuff/tooling/compare/v0.7.0...v0.8.0
