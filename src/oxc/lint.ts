@@ -68,6 +68,9 @@ function createReactPreset(): OxlintConfig {
 			'react/rules-of-hooks': 'error',
 			'react/only-export-components': ['warn', { allowConstantExport: true }],
 		},
+		overrides: [
+			{ files: TEST_FILES, rules: { 'react/only-export-components': 'off' } },
+		],
 	});
 }
 

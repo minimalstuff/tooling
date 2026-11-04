@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Fixed
+
+- With `react: true`, `react/only-export-components` is off in test files (`*.test.*`, `*.spec.*` and `tests/`), where Fast Refresh never applies, so test helpers that re-export a library next to a custom `render` are no longer flagged.
+
 ## [0.8.1] - 2026-11-04
 
 ### Fixed

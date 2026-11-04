@@ -43,6 +43,12 @@ const AWAIT_IN_LOOP_SOURCE = `export async function run(items: string[]): Promis
 	}
 }
 `;
+const MIXED_EXPORTS_SOURCE = `export function Component() {
+	return null;
+}
+
+export const helper = () => 1;
+`;
 const WRONG_PARAM_NAMES_SOURCE = `export const pending = new Promise<void>((done) => {
 	done();
 });
@@ -120,7 +126,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides).toHaveLength(3);
+		expect(presetOverrides).toHaveLength(4);
 		expect(config.overrides).toEqual([userOverride]);
 	});
 
@@ -233,7 +239,7 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		const presetOverrides = (config.extends ?? []).flatMap((part) =>
 			typeof part === 'string' ? [] : (part.overrides ?? [])
 		);
-		expect(presetOverrides[2]?.rules).toHaveProperty(
+		expect(presetOverrides[3]?.rules).toHaveProperty(
 			'@adonisjs/no-backend-import-in-frontend',
 			'error'
 		);
@@ -360,6 +366,30 @@ describe('minimalstuffPreset (oxlint) with the oxlint binary', () => {
 
 		expect(outcome.exitCode).not.toBe(0);
 		expect(outcome.output).toContain('rules-of-hooks');
+	});
+
+	it('should report only-export-components when a component file also exports a function', async () => {
+		const outcome = await lintFixture('{ react: true }', {
+			'src/render.tsx': MIXED_EXPORTS_SOURCE,
+		});
+
+		expect(outcome.output).toContain('only-export-components');
+	});
+
+	it('should not report only-export-components when the file is under a tests directory', async () => {
+		const outcome = await lintFixture('{ react: true }', {
+			'tests/render.tsx': MIXED_EXPORTS_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('only-export-components');
+	});
+
+	it('should not report only-export-components when the file is a spec file', async () => {
+		const outcome = await lintFixture('{ react: true }', {
+			'src/render.spec.tsx': MIXED_EXPORTS_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('only-export-components');
 	});
 
 	it('should not report rules-of-hooks when react is disabled', async () => {
