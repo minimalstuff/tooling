@@ -3,6 +3,11 @@
 import { confirm, intro, log, outro } from '@clack/prompts';
 import color from 'picocolors';
 
+import {
+	CHECK_RELEASE_SUBCOMMAND,
+	EXIT_CODE_INVALID_INPUT,
+} from '#check_release/constants.ts';
+import { runCheckRelease } from '#check_release/run_check_release.ts';
 import { installDevPackages } from '#cli/install_dev_packages.ts';
 import { listDevPackages } from '#cli/list_dev_packages.ts';
 import { promptPresetsForTools } from '#cli/prompt_presets.ts';
@@ -58,8 +63,31 @@ async function main(): Promise<void> {
 	log.success('All done.');
 }
 
-main().catch((error: unknown) => {
-	log.error(error instanceof Error ? error.message : String(error));
-	log.info('Files written before the error are kept.');
-	process.exit(FAILURE_EXIT_CODE);
-});
+function runSetup(): void {
+	main().catch((error: unknown) => {
+		log.error(error instanceof Error ? error.message : String(error));
+		log.info('Files written before the error are kept.');
+		process.exit(FAILURE_EXIT_CODE);
+	});
+}
+
+async function runCheckReleaseCommand(): Promise<void> {
+	process.exitCode = await runCheckRelease(process.cwd());
+}
+
+function exitWithUnknownSubcommand(subcommand: string): never {
+	console.error(
+		`Unknown subcommand "${subcommand}". Valid subcommands: ${CHECK_RELEASE_SUBCOMMAND}. Run without argument for the interactive setup.`
+	);
+	process.exit(EXIT_CODE_INVALID_INPUT);
+}
+
+const subcommand = process.argv[2];
+
+if (subcommand === undefined) {
+	runSetup();
+} else if (subcommand === CHECK_RELEASE_SUBCOMMAND) {
+	await runCheckReleaseCommand();
+} else {
+	exitWithUnknownSubcommand(subcommand);
+}

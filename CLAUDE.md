@@ -19,9 +19,9 @@ Public npm package: oxlint, oxfmt, Knip and EditorConfig presets, plus an intera
 ## Decisions
 
 - `@adonisjs/eslint-plugin` is an optional peer, not a dependency: with strict pnpm, oxlint cannot resolve a plugin nested in this package's dependencies.
-- Publishing happens only through `.github/workflows/publish.yml` on a GitHub release (npm trusted publishing, provenance), never with a local `npm publish`. Prereleases go through `pnpm release:next`, never `pnpm release --preRelease` (it empties `[Unreleased]`, see `docs/releasing.md`).
+- Releases happen only through the dispatched `.github/workflows/publish.yml` (`gh workflow run publish.yml`), which calls `release.yml` then publishes (npm trusted publishing, provenance); never a local `pnpm release` or `npm publish`. A prerelease runs `pnpm release:next`, never `pnpm release --preRelease` (it empties `[Unreleased]`, see `docs/releasing.md`).
 - The repo lints and formats itself with its own presets imported from `src/`, so a preset change affects this repo's lint immediately.
-- The CLI is interactive only and exits with code 1 without a TTY. Non-interactive flags were left out on purpose.
+- The setup (no argument) stays interactive and exits with code 1 without a TTY; no non-interactive flags on purpose. `check-release` is the exception: non-interactive by design, for CI, and reads only `pnpm-lock.yaml`.
 
 ## Rejected
 

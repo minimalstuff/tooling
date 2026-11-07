@@ -1,0 +1,189 @@
+# Reusable release workflow: bumps the version, tags and creates the GitHub
+# release with release-it, in CI only. The caller runs its checks first.
+#
+# The caller must grant `contents: write` to the calling job.
+#
+# The deploy key never sits on disk while third-party code runs: dependencies
+# are installed with --ignore-scripts, release-it only commits and tags locally,
+# and the key is loaded in ssh-agent in the last step, which only runs git.
+#
+# Inputs:
+#   increment              Required. patch, minor or major.
+#   release-script         package.json script that runs release-it. Default: release.
+#   pre-release-id         Pre-release identifier (for example next). Default: none.
+#   check-release-command  Command that fails when the release is unsafe.
+#                          Default: pnpm exec tooling check-release.
+#   node-version-file      File that holds the Node version. Default: .node-version.
+#   release-environment    Environment of the caller repository that holds the
+#                          deploy key secret. Default: release.
+#
+# Secrets:
+#   release-deploy-key     Required. Private SSH key of a deploy key with write
+#                          access. Pushing with it, instead of GITHUB_TOKEN, lets a
+#                          tag ruleset allow only this key to create tags, and makes
+#                          the pushed commit and tag trigger other workflows. Store
+#                          it as a secret of the `release-environment` environment
+#                          of the caller repository and pass it by name:
+#                          release-deploy-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+#                          The calling job must not declare an environment.
+#
+# Outputs:
+#   version                Version in package.json after the release.
+#   tag                    Latest tag reachable from HEAD after the release.
+
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      increment:
+        type: string
+        required: true
+      release-script:
+        type: string
+        default: release
+      pre-release-id:
+        type: string
+        default: ""
+      check-release-command:
+        type: string
+        default: pnpm exec tooling check-release
+      node-version-file:
+        type: string
+        default: .node-version
+      release-environment:
+        type: string
+        default: release
+    secrets:
+      release-deploy-key:
+        required: true
+    outputs:
+      version:
+        value: ${{ jobs.release.outputs.version }}
+      tag:
+        value: ${{ jobs.release.outputs.tag }}
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.release-environment }}
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - name: Require the main branch
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$REF" != "refs/heads/main" ]]; then
+            echo "Releases run from main only, got $REF" >&2
+            exit 1
+          fi
+
+      - name: Validate increment
+        env:
+          INCREMENT: ${{ inputs.increment }}
+        run: |
+          set -euo pipefail
+          case "$INCREMENT" in
+            patch|minor|major) ;;
+            *)
+              echo "increment must be patch, minor or major, got '$INCREMENT'" >&2
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ${{ inputs.node-version-file }}
+          package-manager-cache: false
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Check the release is safe
+        env:
+          CHECK_RELEASE_COMMAND: ${{ inputs.check-release-command }}
+        run: |
+          set -euo pipefail
+          eval "$CHECK_RELEASE_COMMAND"
+
+      - name: Configure git identity
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898298+github-actions[bot]@users.noreply.github.com"
+
+      - name: Release locally
+        id: release
+        env:
+          RELEASE_SCRIPT: ${{ inputs.release-script }}
+          INCREMENT: ${{ inputs.increment }}
+          PRE_RELEASE_ID: ${{ inputs.pre-release-id }}
+        run: |
+          set -euo pipefail
+          ARGUMENTS=("$INCREMENT" --ci --no-git.push --no-github.release)
+          if [[ -n "$PRE_RELEASE_ID" ]]; then
+            ARGUMENTS+=("--preRelease=$PRE_RELEASE_ID")
+          fi
+          pnpm run "$RELEASE_SCRIPT" "${ARGUMENTS[@]}"
+          {
+            echo "version=$(node -p 'require("./package.json").version')"
+            echo "tag=$(git describe --tags --abbrev=0)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Push commit and tag
+        env:
+          DEPLOY_KEY: ${{ secrets.release-deploy-key }}
+          TAG: ${{ steps.release.outputs.tag }}
+          GITHUB_HOST_KEY: github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+        run: |
+          set -euo pipefail
+          eval "$(ssh-agent -s)" > /dev/null
+          trap 'ssh-agent -k > /dev/null' EXIT
+          printf '%s\n' "$DEPLOY_KEY" | ssh-add - 2> /dev/null
+          KNOWN_HOSTS="$RUNNER_TEMP/known_hosts"
+          printf '%s\n' "$GITHUB_HOST_KEY" > "$KNOWN_HOSTS"
+          export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$KNOWN_HOSTS"
+          git push --atomic "git@github.com:$GITHUB_REPOSITORY.git" HEAD:refs/heads/main "refs/tags/$TAG"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          NOTES_FILE="$RUNNER_TEMP/release_notes.md"
+          extract_section() {
+            awk -v heading="## [$1]" '
+              index($0, heading) == 1 { found = 1; next }
+              found && index($0, "## [") == 1 { exit }
+              found { print }
+            ' CHANGELOG.md
+          }
+          extract_section "$VERSION" > "$NOTES_FILE"
+          if [[ "$VERSION" == *-* && -z "$(tr -d '[:space:]' < "$NOTES_FILE")" ]]; then
+            extract_section Unreleased > "$NOTES_FILE"
+          fi
+          if [[ -z "$(tr -d '[:space:]' < "$NOTES_FILE")" ]]; then
+            echo "No CHANGELOG.md entries found for $VERSION" >&2
+            exit 1
+          fi
+          FLAGS=(--verify-tag)
+          if [[ "$VERSION" == *-* ]]; then
+            FLAGS+=(--prerelease)
+          fi
+          gh release create "$TAG" --title "$TAG" --notes-file "$NOTES_FILE" "${FLAGS[@]}"

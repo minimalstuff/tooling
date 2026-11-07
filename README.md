@@ -26,6 +26,10 @@ pnpm dlx @minimalstuff/tooling@latest
 
 The CLI asks which tools to set up (EditorConfig, OXC, Knip), offers VS Code settings when OXC is selected, and asks for presets (`react`, `adonisjs`, `vitest`) pre-selected from your dependencies. It asks before overwriting a file and only adds the `package.json` scripts that are missing. It then installs the packages once as devDependencies with the detected package manager. See the [CLI reference](docs/cli.md) for details.
 
+### Block releases that ship a patched or linked `@minimalstuff/*` package
+
+`pnpm exec tooling check-release` reads `pnpm-lock.yaml` and exits with code 1 when a `@minimalstuff/*` package is patched (`pnpm patch`) or linked from outside the repository (`link:`, `file:`). It never prompts, so it runs in CI. The reusable workflow `.github/workflows/release.yml` runs it before cutting a release. See the [CLI reference](docs/cli.md#check-release).
+
 ### Manually
 
 ```bash

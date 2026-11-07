@@ -57,7 +57,8 @@
 		"@antfu/install-pkg": "^2.1.0",
 		"@clack/prompts": "^1.8.1",
 		"jsonc-parser": "^3.3.1",
-		"picocolors": "^1.1.1"
+		"picocolors": "^1.1.1",
+		"yaml": "^2.9.1"
 	},
 	"devDependencies": {
 		"@adonisjs/eslint-plugin": "^2.2.2",
@@ -101,9 +102,6 @@
 	},
 	"packageManager": "pnpm@12.16.1",
 	"release-it": {
-		"hooks": {
-			"before:init": "pnpm checks"
-		},
 		"git": {
 			"requireCleanWorkingDir": true,
 			"requireUpstream": true,

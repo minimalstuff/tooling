@@ -4,6 +4,11 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Added
+
+- `tooling check-release` fails (exit code 1) when `pnpm-lock.yaml` still has a `pnpm patch`, or a `@minimalstuff/*` dependency that is not a registry version (`link:` outside the repository, `file:`, git or tarball URL). It never prompts, so it runs in CI and in a Dockerfile.
+- A reusable GitHub workflow, `minimalstuff/tooling/.github/workflows/release.yml`, cuts a release (version bump, tag, GitHub release) in CI after running `tooling check-release`, with a deploy key kept in an environment secret, so only CI can create tags.
+
 ## [0.8.2] - 2026-11-04
 
 ### Fixed
