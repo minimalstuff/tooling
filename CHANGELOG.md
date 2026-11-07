@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Fixed
+
+- The reusable release workflow works in private repositories: the `git fetch` that release-it always runs authenticates with the job token, passed to git through the environment of that step only.
+
 ## [0.9.0] - 2026-11-07
 
 ### Added

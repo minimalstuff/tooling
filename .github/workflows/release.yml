@@ -7,6 +7,10 @@
 # are installed with --ignore-scripts, release-it only commits and tags locally,
 # and the key is loaded in ssh-agent in the last step, which only runs git.
 #
+# release-it always runs `git fetch`, which needs credentials in a private
+# repository. The job token reaches git through GIT_CONFIG_* variables of that
+# step only, never .git/config; tags still need the deploy key.
+#
 # Inputs:
 #   increment              Required. patch, minor or major.
 #   release-script         package.json script that runs release-it. Default: release.
@@ -132,8 +136,14 @@ jobs:
           RELEASE_SCRIPT: ${{ inputs.release-script }}
           INCREMENT: ${{ inputs.increment }}
           PRE_RELEASE_ID: ${{ inputs.pre-release-id }}
+          FETCH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          BASIC_AUTH=$(printf 'x-access-token:%s' "$FETCH_TOKEN" | base64 -w0)
+          echo "::add-mask::$BASIC_AUTH"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $BASIC_AUTH"
           ARGUMENTS=("$INCREMENT" --ci --no-git.push --no-github.release)
           if [[ -n "$PRE_RELEASE_ID" ]]; then
             ARGUMENTS+=("--preRelease=$PRE_RELEASE_ID")
