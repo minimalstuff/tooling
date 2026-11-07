@@ -51,7 +51,7 @@
 		"build": "tsdown",
 		"checks": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm test && pnpm build",
 		"release": "release-it",
-		"release:next": "release-it --preRelease=next --plugins.@release-it/keep-a-changelog.keepUnreleased"
+		"release:next": "release-it --preRelease=next --plugins.@release-it/keep-a-changelog.keepUnreleased=true"
 	},
 	"dependencies": {
 		"@antfu/install-pkg": "^2.1.0",

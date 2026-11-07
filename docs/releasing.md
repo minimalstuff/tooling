@@ -24,7 +24,7 @@ The workflow runs `pnpm release:next`: the entries stay under `[Unreleased]`, so
 
 Do not run `release-it --preRelease=next` through `pnpm release`: it moves the entries to a prerelease section, and the next stable release fails with `There are no entries under "Unreleased" section in CHANGELOG.md.`
 
-In the `release:next` script, the `keepUnreleased` flag must stay bare: `=false` would be read as true.
+In the `release:next` script, keep `--preRelease=next` first and `keepUnreleased=true` last, with its `=`: the workflow appends the increment after the script, and release-it 21 takes a positional argument that follows a bare flag or `--preRelease=next` as that flag's value, so the prerelease would come out as a patch (`0.9.1-next.0` instead of `0.10.0-next.0`). `=false` would still be read as true.
 
 ## What the publish workflow does
 
