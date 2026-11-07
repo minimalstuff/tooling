@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Added
+
+- The reusable release workflow and `publish.yml` accept `increment: prerelease`, which continues the current prerelease series (`1.0.0-next.0` to `1.0.0-next.1`) instead of starting a new one.
+
 ## [0.9.1] - 2026-11-07
 
 ### Fixed

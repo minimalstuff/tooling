@@ -12,7 +12,10 @@
 # step only, never .git/config; tags still need the deploy key.
 #
 # Inputs:
-#   increment              Required. patch, minor or major.
+#   increment              Required. patch, minor, major, or prerelease to
+#                          continue the current prerelease series
+#                          (1.0.0-next.0 to 1.0.0-next.1). prerelease needs a
+#                          release-script that passes --preRelease.
 #   release-script         package.json script that runs release-it. Default: release.
 #   pre-release-id         Pre-release identifier (for example next). Default: none.
 #   check-release-command  Command that fails when the release is unsafe.
@@ -96,9 +99,9 @@ jobs:
         run: |
           set -euo pipefail
           case "$INCREMENT" in
-            patch|minor|major) ;;
+            patch|minor|major|prerelease) ;;
             *)
-              echo "increment must be patch, minor or major, got '$INCREMENT'" >&2
+              echo "increment must be patch, minor, major or prerelease, got '$INCREMENT'" >&2
               exit 1
               ;;
           esac
@@ -144,11 +147,25 @@ jobs:
           export GIT_CONFIG_COUNT=1
           export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $BASIC_AUTH"
-          ARGUMENTS=("$INCREMENT" --ci --no-git.push --no-github.release)
+          CURRENT_VERSION=$(node -p 'require("./package.json").version')
+          ARGUMENTS=(--ci --no-git.push --no-github.release)
+          if [[ "$INCREMENT" == prerelease ]]; then
+            if [[ "$CURRENT_VERSION" != *-* ]]; then
+              echo "increment prerelease continues a prerelease series, but $CURRENT_VERSION is not a prerelease" >&2
+              exit 1
+            fi
+          else
+            ARGUMENTS=("$INCREMENT" "${ARGUMENTS[@]}")
+          fi
           if [[ -n "$PRE_RELEASE_ID" ]]; then
             ARGUMENTS+=("--preRelease=$PRE_RELEASE_ID")
           fi
           pnpm run "$RELEASE_SCRIPT" "${ARGUMENTS[@]}"
+          NEW_VERSION=$(node -p 'require("./package.json").version')
+          if [[ "$INCREMENT" == prerelease && "$NEW_VERSION" != *-* ]]; then
+            echo "increment prerelease produced the stable version $NEW_VERSION: the release script must pass --preRelease. Nothing was pushed." >&2
+            exit 1
+          fi
           {
             echo "version=$(node -p 'require("./package.json").version')"
             echo "tag=$(git describe --tags --abbrev=0)"

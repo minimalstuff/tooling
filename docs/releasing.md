@@ -26,6 +26,14 @@ Do not run `release-it --preRelease=next` through `pnpm release`: it moves the e
 
 In the `release:next` script, keep `--preRelease=next` first and `keepUnreleased=true` last, with its `=`: the workflow appends the increment after the script, and release-it 21 takes a positional argument that follows a bare flag or `--preRelease=next` as that flag's value, so the prerelease would come out as a patch (`0.9.1-next.0` instead of `0.10.0-next.0`). `=false` would still be read as true.
 
+### Release the next prerelease of the same version
+
+```bash
+gh workflow run publish.yml -f increment=prerelease
+```
+
+`patch`, `minor` and `major` always start a new prerelease series: from `1.0.0-next.0`, `major` gives `2.0.0-next.0`. `prerelease` runs release-it without an increment, so `1.0.0-next.0` becomes `1.0.0-next.1`. It runs `pnpm release:next` even without `prerelease=true`, fails when the current version is not a prerelease, and fails before pushing when the result is a stable version. A repository that calls the reusable workflow must pass a release script with `--preRelease` for this increment.
+
 ## What the publish workflow does
 
 `.github/workflows/publish.yml` runs on manual dispatch:

@@ -6,7 +6,7 @@ on:
       increment:
         description: Version increment
         type: choice
-        options: [patch, minor, major]
+        options: [patch, minor, major, prerelease]
         required: true
       prerelease:
         description: Publish a prerelease under the next dist-tag
@@ -36,7 +36,7 @@ jobs:
     uses: ./.github/workflows/release.yml
     with:
       increment: ${{ inputs.increment }}
-      release-script: ${{ inputs.prerelease && 'release:next' || 'release' }}
+      release-script: ${{ (inputs.prerelease || inputs.increment == 'prerelease') && 'release:next' || 'release' }}
       check-release-command: node src/cli/index.ts check-release
     secrets:
       release-deploy-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
