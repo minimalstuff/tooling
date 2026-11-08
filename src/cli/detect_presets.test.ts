@@ -19,6 +19,7 @@ describe('detectPresetFlags', () => {
 			react: false,
 			adonisjs: false,
 			vitest: false,
+			lingui: false,
 		});
 	});
 
@@ -43,12 +44,26 @@ describe('detectPresetFlags', () => {
 		expect(flags.vitest).toBe(true);
 	});
 
+	it.each(['@lingui/core', '@lingui/react'])(
+		'should detect lingui when %s is a dependency',
+		(name) => {
+			expect(
+				detectPresetFlags([{ devDependencies: { [name]: '1' } }]).lingui
+			).toBe(true);
+		}
+	);
+
 	it('should merge detections across several manifests', () => {
 		const flags = detectPresetFlags([
 			{ dependencies: { react: '1' } },
 			{ devDependencies: { vitest: '1' } },
 		]);
-		expect(flags).toEqual({ react: true, adonisjs: false, vitest: true });
+		expect(flags).toEqual({
+			react: true,
+			adonisjs: false,
+			vitest: true,
+			lingui: false,
+		});
 	});
 });
 
@@ -73,7 +88,12 @@ describe('hasSubpathImports', () => {
 describe('preset conversions', () => {
 	it('should list only the enabled preset names', () => {
 		expect(
-			toDetectedPresetNames({ react: true, adonisjs: false, vitest: true })
+			toDetectedPresetNames({
+				react: true,
+				adonisjs: false,
+				vitest: true,
+				lingui: false,
+			})
 		).toEqual(['react', 'vitest']);
 	});
 
@@ -82,6 +102,7 @@ describe('preset conversions', () => {
 			react: false,
 			adonisjs: true,
 			vitest: false,
+			lingui: false,
 		});
 	});
 });
@@ -120,6 +141,7 @@ describe('detectPresets', () => {
 			react: true,
 			adonisjs: true,
 			vitest: true,
+			lingui: false,
 		});
 	});
 
@@ -137,6 +159,7 @@ describe('detectPresets', () => {
 			react: false,
 			adonisjs: false,
 			vitest: false,
+			lingui: false,
 		});
 	});
 

@@ -21,6 +21,7 @@ async function promptPresets(cwd: string): Promise<PresetFlags> {
 				{ value: 'react', label: 'React' },
 				{ value: 'adonisjs', label: 'AdonisJS' },
 				{ value: 'vitest', label: 'Vitest' },
+				{ value: 'lingui', label: 'Lingui' },
 			],
 			initialValues: toDetectedPresetNames(detectedPresets),
 			required: false,

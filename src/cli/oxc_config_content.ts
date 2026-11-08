@@ -9,6 +9,7 @@ const OXLINT_PRESET_ORDER: readonly PresetName[] = [
 	'adonisjs',
 	'react',
 	'vitest',
+	'lingui',
 ];
 
 const DISABLED_SUBPATH_IMPORTS_OPTION: PresetOption = {

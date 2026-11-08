@@ -1,6 +1,6 @@
 export type ConfigTool = 'editorconfig' | 'oxc' | 'knip' | 'vscode';
 
-export type PresetName = 'react' | 'adonisjs' | 'vitest';
+export type PresetName = 'react' | 'adonisjs' | 'vitest' | 'lingui';
 
 export type PresetFlags = Readonly<Record<PresetName, boolean>>;
 

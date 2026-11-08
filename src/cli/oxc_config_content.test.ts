@@ -10,6 +10,7 @@ const NO_PRESETS: PresetFlags = {
 	react: false,
 	adonisjs: false,
 	vitest: false,
+	lingui: false,
 };
 
 describe('buildOxlintConfigContent', () => {
@@ -31,11 +32,12 @@ describe('buildOxlintConfigContent', () => {
 				react: true,
 				adonisjs: true,
 				vitest: true,
+				lingui: true,
 			},
 			true
 		);
 		expect(content).toBe(
-			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';\n\nexport default minimalstuffPreset({\n\tadonisjs: true,\n\treact: true,\n\tvitest: true,\n});\n"
+			"import { minimalstuffPreset } from '@minimalstuff/tooling/oxc/lint';\n\nexport default minimalstuffPreset({\n\tadonisjs: true,\n\treact: true,\n\tvitest: true,\n\tlingui: true,\n});\n"
 		);
 	});
 
@@ -48,6 +50,18 @@ describe('buildOxlintConfigContent', () => {
 	it('should not mention subpathImports when the project has subpath imports', () => {
 		expect(buildOxlintConfigContent(NO_PRESETS, true)).not.toContain(
 			'subpathImports'
+		);
+	});
+
+	it('should write lingui: true when lingui is enabled', () => {
+		expect(
+			buildOxlintConfigContent({ ...NO_PRESETS, lingui: true }, true)
+		).toContain('minimalstuffPreset({\n\tlingui: true,\n});');
+	});
+
+	it('should ignore the lingui flag in the formatter config', () => {
+		expect(buildOxfmtConfigContent({ ...NO_PRESETS, lingui: true })).toContain(
+			'minimalstuffPreset();'
 		);
 	});
 

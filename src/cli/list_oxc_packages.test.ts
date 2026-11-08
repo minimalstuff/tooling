@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { listOxcPackages } from '#cli/list_oxc_packages.ts';
 
-const NO_PRESETS = { react: false, adonisjs: false, vitest: false };
+const NO_PRESETS = {
+	react: false,
+	adonisjs: false,
+	vitest: false,
+	lingui: false,
+};
 
 describe('listOxcPackages', () => {
 	it('should include the adonisjs eslint plugin when adonisjs is enabled', () => {

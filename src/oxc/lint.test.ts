@@ -49,6 +49,26 @@ const MIXED_EXPORTS_SOURCE = `export function Component() {
 
 export const helper = () => 1;
 `;
+const UNTRANSLATED_TEXT_SOURCE = `export function Label() {
+	return <p>Untranslated text</p>;
+}
+`;
+const UNTRANSLATED_TITLE_SOURCE = `export function Label() {
+	return <div title="Hello world" />;
+}
+`;
+const ALLOWED_LITERALS_SOURCE = `import { Kbd, Trans } from 'lib';
+
+export function Label() {
+	return (
+		<div className="flex">
+			<Trans>Untranslated text</Trans>
+			<Kbd>Ctrl</Kbd>
+			<img alt="" src="x" />
+		</div>
+	);
+}
+`;
 const WRONG_PARAM_NAMES_SOURCE = `export const pending = new Promise<void>((done) => {
 	done();
 });
@@ -190,6 +210,65 @@ describe('minimalstuffPreset (oxlint) config', () => {
 		expect(collectPlugins(minimalstuffPreset({ vitest: true }))).toContain(
 			'vitest'
 		);
+	});
+
+	it('should not include lingui parts when lingui is disabled', () => {
+		expect(
+			collectRules(minimalstuffPreset({ react: true }))
+		).not.toHaveProperty('react/jsx-no-literals');
+	});
+
+	it('should include jsx-no-literals with the default allowlist when lingui is true', () => {
+		const rule = collectRules(minimalstuffPreset({ lingui: true }))[
+			'react/jsx-no-literals'
+		];
+
+		expect(rule).toEqual([
+			'error',
+			expect.objectContaining({
+				allowedStrings: [
+					'',
+					'·',
+					'•',
+					'…',
+					'%',
+					'(',
+					')',
+					',',
+					'/',
+					':',
+					'|',
+					'-',
+				],
+			}),
+		]);
+	});
+
+	it('should append the user allowed strings after the defaults when lingui is an object', () => {
+		const rule = collectRules(
+			minimalstuffPreset({ lingui: { allowedStrings: ['Takumi'] } })
+		)['react/jsx-no-literals'];
+
+		expect(rule).toEqual([
+			'error',
+			expect.objectContaining({
+				allowedStrings: [
+					'',
+					'·',
+					'•',
+					'…',
+					'%',
+					'(',
+					')',
+					',',
+					'/',
+					':',
+					'|',
+					'-',
+					'Takumi',
+				],
+			}),
+		]);
 	});
 
 	it('should not include adonisjs rules when adonisjs is disabled', () => {
@@ -390,6 +469,47 @@ describe('minimalstuffPreset (oxlint) with the oxlint binary', () => {
 		});
 
 		expect(outcome.output).not.toContain('only-export-components');
+	});
+
+	it('should report jsx-no-literals when JSX text is a literal and lingui is enabled', async () => {
+		const outcome = await lintFixture('{ lingui: true }', {
+			'src/label.tsx': UNTRANSLATED_TEXT_SOURCE,
+		});
+
+		expect(outcome.exitCode).not.toBe(0);
+		expect(outcome.output).toContain('jsx-no-literals');
+	});
+
+	it('should report jsx-no-literals when a title attribute is a literal and lingui is enabled', async () => {
+		const outcome = await lintFixture('{ lingui: true }', {
+			'src/label.tsx': UNTRANSLATED_TITLE_SOURCE,
+		});
+
+		expect(outcome.output).toContain('jsx-no-literals');
+	});
+
+	it('should not report jsx-no-literals for Trans, Kbd, empty alt and className when lingui is enabled', async () => {
+		const outcome = await lintFixture('{ lingui: true }', {
+			'src/label.tsx': ALLOWED_LITERALS_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('jsx-no-literals');
+	});
+
+	it('should not report jsx-no-literals in a spec file when lingui is enabled', async () => {
+		const outcome = await lintFixture('{ lingui: true }', {
+			'src/label.spec.tsx': UNTRANSLATED_TEXT_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('jsx-no-literals');
+	});
+
+	it('should not report jsx-no-literals when lingui is disabled', async () => {
+		const outcome = await lintFixture('{ react: true }', {
+			'src/label.tsx': UNTRANSLATED_TEXT_SOURCE,
+		});
+
+		expect(outcome.output).not.toContain('jsx-no-literals');
 	});
 
 	it('should not report rules-of-hooks when react is disabled', async () => {

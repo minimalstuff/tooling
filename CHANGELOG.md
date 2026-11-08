@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in `lingui` option in the oxlint preset (`boolean | { allowedStrings?: string[] }`): `react/jsx-no-literals` refuses visible JSX text and user-facing attribute strings (`aria-label`, `title`, `alt`, `placeholder`, the text props of `@minimalstuff/ui`...) that bypass Lingui, `allowedStrings` extends the allowlist, and the CLI detects `@lingui/core` and `@lingui/react`.
+
 ## [0.10.0] - 2026-11-07
 
 ### Added

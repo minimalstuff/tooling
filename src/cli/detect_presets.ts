@@ -16,6 +16,7 @@ const REACT_PACKAGES = [
 	'@types/react-dom',
 ];
 const VITEST_PACKAGES = ['vitest'];
+const LINGUI_PACKAGES = ['@lingui/core', '@lingui/react'];
 const ADONISJS_SCOPE_PREFIX = '@adonisjs/';
 const SUBPATH_IMPORT_PREFIX = '#';
 
@@ -47,6 +48,7 @@ export function detectPresetFlags(
 	return {
 		react: hasAnyOf(REACT_PACKAGES),
 		vitest: hasAnyOf(VITEST_PACKAGES),
+		lingui: hasAnyOf(LINGUI_PACKAGES),
 		adonisjs: [...names].some((name) => name.startsWith(ADONISJS_SCOPE_PREFIX)),
 	};
 }
@@ -70,6 +72,7 @@ export function toPresetFlags(names: readonly PresetName[]): PresetFlags {
 		react: names.includes('react'),
 		adonisjs: names.includes('adonisjs'),
 		vitest: names.includes('vitest'),
+		lingui: names.includes('lingui'),
 	};
 }
 

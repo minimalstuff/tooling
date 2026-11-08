@@ -19,18 +19,21 @@ export default minimalstuffPreset({
 
 `minimalstuffPreset` returns the root config. Any oxlint option (`rules`, `overrides`, `plugins`, `extends`, ...) can be passed next to the preset options:
 
-| Option           | Type      | Default | Enables                                                                                                                                                                                                |
-| ---------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `react`          | `boolean` | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                                                                                                              |
-| `adonisjs`       | `boolean` | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns (needs `@adonisjs/eslint-plugin` as a dev dependency, the CLI installs it)                   |
-| `vitest`         | `boolean` | `false` | `vitest` plugin                                                                                                                                                                                        |
-| `subpathImports` | `boolean` | `true`  | `no-restricted-imports` on relative specifiers (`./*`, `../*`), so imports go through Node subpath imports (`"imports": { "#*": "./src/*" }` in `package.json`). Set `false` to allow relative imports |
+| Option           | Type                                       | Default | Enables                                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `react`          | `boolean`                                  | `false` | `react` and `jsx-a11y` plugins, `react/rules-of-hooks` and `react/only-export-components`                                                                                                                   |
+| `adonisjs`       | `boolean`                                  | `false` | `@adonisjs/eslint-plugin` lazy import rules, Lucid-aware `no-floating-promises`, AdonisJS ignore patterns (needs `@adonisjs/eslint-plugin` as a dev dependency, the CLI installs it)                        |
+| `vitest`         | `boolean`                                  | `false` | `vitest` plugin                                                                                                                                                                                             |
+| `lingui`         | `boolean \| { allowedStrings?: string[] }` | `false` | `react/jsx-no-literals` refusing visible JSX text and user-facing attribute strings that bypass Lingui; `allowedStrings` adds strings that never need translating (brand names...) to the default allowlist |
+| `subpathImports` | `boolean`                                  | `true`  | `no-restricted-imports` on relative specifiers (`./*`, `../*`), so imports go through Node subpath imports (`"imports": { "#*": "./src/*" }` in `package.json`). Set `false` to allow relative imports      |
 
 With `react`, `react/only-export-components` is off in test files (`**/*.{test,spec}.{ts,tsx,js,jsx}` and `**/tests/**`): Fast Refresh never applies there, so test helpers can re-export a library next to a custom `render`.
 
 With `adonisjs`, `typescript/consistent-type-imports` is off in `**/app/**`, `**/commands/**` and `**/providers/**`: `@inject()` constructor injection needs the injected class as a value import (`emitDecoratorMetadata`), and the rule's autofix would turn it into a type import and break injection at runtime.
 
 With both `adonisjs` and `react`, the Inertia rules (`no-backend-import-in-frontend`, `prefer-adonisjs-inertia-link`, `prefer-adonisjs-inertia-form`) are enabled on `**/inertia/**/*.{ts,tsx}`.
+
+With `lingui`, `react/jsx-no-literals` reports literal JSX text and literal strings in the attributes that reach the user: `aria-label`, `aria-description`, `aria-roledescription`, `aria-valuetext`, `title`, `alt`, `placeholder`, plus the text props of `@minimalstuff/ui` components (`label`, `description`, `error`, `text`, `message`, `closeLabel`, `clearLabel`, `menuLabel`, `requiredLabel`, `noResultsText`, `searchPlaceholder`). Any other attribute (`className`, `type`, `id`...) is not text. `Trans` and `Kbd` children are allowed (the message itself, key names), and so are strings identical in every locale: the empty string (decorative `alt=""`), `·`, `•`, `…`, `%`, `(`, `)`, `,`, `/`, `:`, `|` and `-`. The rule is off in test files. It does not catch a wrapped literal such as `{'text'}`: oxlint's `noStrings` would flag every attribute literal, `className` included, so it stays off.
 
 The base preset enables the `typescript`, `unicorn` and `oxc` plugins, the `correctness` category as `error`, and type-aware linting with type checking (`typeAware`, `typeCheck`) with a set of strict `typescript/*` rules.
 

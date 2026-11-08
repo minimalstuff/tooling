@@ -17,8 +17,56 @@ const ADONISJS_INJECTION_FILES = [
 	'**/providers/**',
 ];
 const TEST_FILES = ['**/*.{test,spec}.{ts,tsx,js,jsx}', '**/tests/**'];
+/**
+ * Attributes whose string reaches the user: the native ones plus the text props
+ * of `@minimalstuff/ui` components. Any other attribute (className, type, id...)
+ * is not text.
+ */
+const LINGUI_TEXT_ATTRIBUTES = [
+	'aria-label',
+	'aria-description',
+	'aria-roledescription',
+	'aria-valuetext',
+	'title',
+	'alt',
+	'placeholder',
+	'label',
+	'description',
+	'error',
+	'text',
+	'message',
+	'closeLabel',
+	'clearLabel',
+	'menuLabel',
+	'requiredLabel',
+	'noResultsText',
+	'searchPlaceholder',
+];
+/**
+ * Strings identical in every locale: empty `alt` on decorative images,
+ * punctuation and separators.
+ */
+const UNTRANSLATABLE_JSX_STRINGS = [
+	'',
+	'·',
+	'•',
+	'…',
+	'%',
+	'(',
+	')',
+	',',
+	'/',
+	':',
+	'|',
+	'-',
+];
 const RELATIVE_IMPORT_MESSAGE =
 	'Use a subpath import (#folder/file.ts) instead of a relative path.';
+
+export interface MinimalstuffLinguiOptions {
+	/** Extra strings that never need translating (brand names...), added to the default allowlist. */
+	allowedStrings?: readonly string[];
+}
 
 export interface MinimalstuffOxlintOptions extends OxlintConfig {
 	/** Enable React rules (hooks, fast refresh) and accessibility checks. */
@@ -27,6 +75,11 @@ export interface MinimalstuffOxlintOptions extends OxlintConfig {
 	adonisjs?: boolean;
 	/** Enable the vitest plugin. */
 	vitest?: boolean;
+	/**
+	 * Refuse visible JSX text and user-facing attribute strings that bypass
+	 * Lingui. Defaults to false.
+	 */
+	lingui?: boolean | MinimalstuffLinguiOptions;
 	/** Report relative imports so code uses Node subpath imports (`#folder/file.ts`). Defaults to true. */
 	subpathImports?: boolean;
 }
@@ -72,6 +125,46 @@ function createReactPreset(): OxlintConfig {
 			{ files: TEST_FILES, rules: { 'react/only-export-components': 'off' } },
 		],
 	});
+}
+
+/**
+ * `Trans` children are the message and `Kbd` children are key names, so both
+ * are allowed. `noStrings` stays off because oxlint then flags every attribute
+ * literal (className...), so wrapped literals (`{'text'}`) are not caught.
+ */
+function createLinguiPreset(
+	extraAllowedStrings: readonly string[]
+): OxlintConfig {
+	return defineConfig({
+		plugins: ['react'],
+		rules: {
+			'react/jsx-no-literals': [
+				'error',
+				{
+					restrictedAttributes: LINGUI_TEXT_ATTRIBUTES,
+					allowedStrings: [
+						...UNTRANSLATABLE_JSX_STRINGS,
+						...extraAllowedStrings,
+					],
+					elementOverrides: {
+						Trans: { allowElement: true },
+						Kbd: { allowElement: true },
+					},
+				},
+			],
+		},
+		overrides: [
+			{ files: TEST_FILES, rules: { 'react/jsx-no-literals': 'off' } },
+		],
+	});
+}
+
+function toLinguiAllowedStrings(
+	lingui: boolean | MinimalstuffLinguiOptions
+): readonly string[] | undefined {
+	if (lingui === false) return undefined;
+	if (lingui === true) return [];
+	return lingui.allowedStrings ?? [];
 }
 
 function createVitestPreset(): OxlintConfig {
@@ -155,6 +248,7 @@ function createPresets(options: {
 	react: boolean;
 	adonisjs: boolean;
 	vitest: boolean;
+	linguiAllowedStrings: readonly string[] | undefined;
 	subpathImports: boolean;
 }): OxlintConfig[] {
 	const presets = [createBasePreset()];
@@ -162,6 +256,9 @@ function createPresets(options: {
 	if (options.vitest) presets.push(createVitestPreset());
 	if (options.adonisjs) presets.push(createAdonisjsPreset());
 	if (options.adonisjs && options.react) presets.push(createInertiaPreset());
+	if (options.linguiAllowedStrings) {
+		presets.push(createLinguiPreset(options.linguiAllowedStrings));
+	}
 	if (options.subpathImports) presets.push(createSubpathImportsPreset());
 	return presets;
 }
@@ -190,6 +287,7 @@ export function minimalstuffPreset(
 		react = false,
 		adonisjs = false,
 		vitest = false,
+		lingui = false,
 		subpathImports = true,
 		extends: userExtends = [],
 		ignorePatterns: userIgnorePatterns = [],
@@ -199,7 +297,13 @@ export function minimalstuffPreset(
 	return defineConfig({
 		...userConfig,
 		extends: [
-			...createPresets({ react, adonisjs, vitest, subpathImports }),
+			...createPresets({
+				react,
+				adonisjs,
+				vitest,
+				linguiAllowedStrings: toLinguiAllowedStrings(lingui),
+				subpathImports,
+			}),
 			...userExtends,
 		],
 		ignorePatterns: createIgnorePatterns(adonisjs, userIgnorePatterns),

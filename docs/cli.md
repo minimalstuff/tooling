@@ -15,7 +15,7 @@ In order:
 1. Confirmation of the current directory.
 2. Tools: EditorConfig, OXC, Knip. A config already present in the current directory or the git root is labelled "(already exists)", and EditorConfig and Knip are then not pre-selected.
 3. VS Code settings, asked only when OXC is selected. Adds `oxc.typeAware` and `editor.defaultFormatter` to `.vscode/settings.json` and keeps existing keys.
-4. Presets (`react`, `adonisjs`, `vitest`), asked when OXC or Knip is selected. They are pre-selected from the dependencies found in the root `package.json` and in the `package.json` of `apps/*` and `packages/*`: `react`, `react-dom`, `@types/react` or `@types/react-dom` for `react`, `vitest` for `vitest`, any `@adonisjs/*` package for `adonisjs`.
+4. Presets (`react`, `adonisjs`, `vitest`, `lingui`), asked when OXC or Knip is selected. They are pre-selected from the dependencies found in the root `package.json` and in the `package.json` of `apps/*` and `packages/*`: `react`, `react-dom`, `@types/react` or `@types/react-dom` for `react`, `vitest` for `vitest`, `@lingui/core` or `@lingui/react` for `lingui`, any `@adonisjs/*` package for `adonisjs`.
 5. Overwrite confirmation for each existing file.
 
 ## Files written

@@ -19,8 +19,14 @@ const NO_PRESETS: PresetFlags = {
 	react: false,
 	adonisjs: false,
 	vitest: false,
+	lingui: false,
 };
-const ALL_PRESETS: PresetFlags = { react: true, adonisjs: true, vitest: true };
+const ALL_PRESETS: PresetFlags = {
+	react: true,
+	adonisjs: true,
+	vitest: true,
+	lingui: true,
+};
 const LONG_WORKSPACE_PATHS = [
 	'apps/customer-facing-webapp',
 	'packages/internal-backend-api',

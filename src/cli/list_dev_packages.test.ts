@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { listDevPackages } from '#cli/list_dev_packages.ts';
 import type { ConfigTool, PromptResult } from '#cli/types.ts';
 
-const NO_PRESETS = { react: false, adonisjs: false, vitest: false };
+const NO_PRESETS = {
+	react: false,
+	adonisjs: false,
+	vitest: false,
+	lingui: false,
+};
 
 function buildResult(tools: ConfigTool[]): PromptResult {
 	return { tools, presetFlags: NO_PRESETS };
