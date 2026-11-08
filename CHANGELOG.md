@@ -4,6 +4,8 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-08
+
 ### Added
 
 - Opt-in `lingui` option in the oxlint preset (`boolean | { allowedStrings?: string[] }`): `react/jsx-no-literals` refuses visible JSX text and user-facing attribute strings (`aria-label`, `title`, `alt`, `placeholder`, the text props of `@minimalstuff/ui`...) that bypass Lingui, `allowedStrings` extends the allowlist, and the CLI detects `@lingui/core` and `@lingui/react`.
@@ -151,7 +153,7 @@ No user-visible changes.
 
 - The framework preset targets React instead of Vue.
 
-[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.11.0...HEAD
 [0.7.0]: https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0
@@ -164,6 +166,7 @@ No user-visible changes.
 [0.1.1]: https://github.com/minimalstuff/tooling/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/minimalstuff/tooling/releases/tag/v0.1.0
 
+[0.11.0]: https://github.com/minimalstuff/tooling/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/minimalstuff/tooling/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/minimalstuff/tooling/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/minimalstuff/tooling/compare/v0.8.2...v0.9.0
