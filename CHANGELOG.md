@@ -4,6 +4,16 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Security
+
+- **Breaking:** the reusable release workflow runs release-it and its npm dependencies in a `prepare` job with no environment, no secret and a read-only token, so third-party code never runs next to the deploy key. The `publish` job, in the release environment, uses only bash, git, jq, awk and gh: it verifies the release commit shipped as a git bundle (one commit on top of the workflow commit, only a version bump and a changelog roll), creates the tag itself, and pushes with the deploy key. See [Upgrade from 0.11 to 0.12](docs/migrating.md#upgrade-from-011-to-012).
+- **Breaking:** release-it no longer tags (the workflow passes `--no-git.tag`): its tag annotation settings are ignored. A release commit that changes a file not listed in the new inputs `version-files` (default `package.json`) or `changelog-files` (default `CHANGELOG.md`) fails.
+
+### Added
+
+- Reusable release workflow: inputs `version-files`, `changelog-files` and `tag-prefix`, and output `sha` (the release commit).
+- Re-running a failed `publish` job is safe: an existing tag is never moved, the push is skipped when the tag and `main` already point at the verified commit, and an existing GitHub release is kept.
+
 ## [0.11.0] - 2026-11-08
 
 ### Added

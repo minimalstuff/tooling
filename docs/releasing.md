@@ -39,8 +39,8 @@ gh workflow run publish.yml -f increment=prerelease
 `.github/workflows/publish.yml` runs on manual dispatch:
 
 1. `checks`: runs the checks and `pnpm test:package` (`checks.yml`).
-2. `release`: calls the reusable `release.yml`, which fails unless it runs on `main`, installs dependencies, runs `tooling check-release` (from the sources, since the package's own bin is not installed here), then runs release-it with `--ci`. release-it bumps the version, moves the `[Unreleased]` entries to a section for the new version, commits `chore(release): <version>`, tags `v<version>`, pushes with the deploy key and creates the GitHub release.
-3. `build`: checks out the tag and runs `pnpm pack`, without cache.
+2. `release`: calls the reusable `release.yml`, in two jobs (see [Reusable release workflow](cli.md#reusable-release-workflow)). `prepare` fails unless it runs on `main`, installs dependencies, runs `tooling check-release` (from the sources, since the package's own bin is not installed here), then runs release-it with `--ci --no-git.tag`: it bumps the version, moves the `[Unreleased]` entries to a section for the new version and commits `chore(release): <version>`, without tag or push. `publish` runs in the `release` environment: it verifies that commit, creates the tag `v<version>`, pushes both with the deploy key and creates the GitHub release.
+3. `build`: checks out the release commit and runs `pnpm pack`, without cache.
 4. `publish`: checks that the tag matches the packed version, runs `npm publish` with provenance (`next` dist-tag for a prerelease version, `latest` otherwise), then checks that the provenance attestation exists.
 
 Only one release runs at a time and a running release is never cancelled.
@@ -51,7 +51,7 @@ Done by hand, once per repository.
 
 ### Environments and deploy key
 
-The deploy key is stored as an environment secret, so only a run on `main` whose release job declares the environment can read it. The reusable workflow declares the environment on its job, and the caller passes the secret by name (`release-deploy-key: ${{ secrets.RELEASE_DEPLOY_KEY }}`); the calling job declares none. Pushing with it instead of `GITHUB_TOKEN` lets a tag ruleset allow only CI to create tags, and makes the pushed commit and tag trigger other workflows.
+The deploy key is stored as an environment secret, so only a run on `main` whose `publish` job declares the environment can read it. The reusable workflow declares the environment on that job, and the caller passes the secret by name (`release-deploy-key: ${{ secrets.RELEASE_DEPLOY_KEY }}`); the calling job declares none. Pushing with it instead of `GITHUB_TOKEN` lets a tag ruleset allow only CI to create tags, and makes the pushed commit and tag trigger other workflows.
 
 1. In **Settings > Environments**, create the environment `release`. Under **Deployment branches and tags**, select **Selected branches and tags** and add `main` only.
 2. Generate a key: `ssh-keygen -t ed25519 -N "" -C "release" -f release_deploy_key`.
@@ -65,7 +65,7 @@ The deploy key is stored as an environment secret, so only a run on `main` whose
 
 The `main` branch protection, if any, must also let the deploy key push the release commit.
 
-The key is loaded in `ssh-agent` only in the last step that pushes, after dependencies are installed with `--ignore-scripts` and release-it has committed and tagged locally. It is never written to disk.
+The key is loaded in `ssh-agent` only in the step that pushes, in a job that runs no npm code: release-it and its dependencies run in the `prepare` job, which has no environment and no secret. The key is never written to disk.
 
 ## Trusted publishing setup
 

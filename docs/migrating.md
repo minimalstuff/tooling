@@ -2,6 +2,31 @@
 
 [README](../README.md)
 
+## Upgrade from 0.11 to 0.12
+
+In 0.x a minor bump is breaking, so `^0.11.0` never resolves to 0.12: upgrade explicitly. The release workflow is a reusable workflow you pin by commit SHA, so move your pin to the 0.12.0 commit.
+
+```bash
+pnpm add -D @minimalstuff/tooling@^0.12.0
+```
+
+The reusable `release.yml` is now split in two jobs, so release-it and its npm dependencies never run next to the deploy key (see [Reusable release workflow](cli.md#reusable-release-workflow)). Inputs and the secret keep their names, with these changes:
+
+- The `release-environment` environment now sits on the `publish` job, not on the whole workflow. Nothing changes in your repository settings: the environment and its `RELEASE_DEPLOY_KEY` secret stay the same. The `prepare` job, which runs release-it, has no environment and no secret.
+- release-it no longer tags: the workflow passes `--no-git.tag`, creates the annotated tag itself in the `publish` job (message `<repository name> <version>`) and ignores the tag annotation settings of your release-it config. Keep `git.tagName` in step with the new input `tag-prefix`.
+- The release commit is verified before it is pushed: it may only bump the version and roll the changelogs. A file that the release commit changes must be listed in the new inputs `version-files` (default `package.json`) or `changelog-files` (default `CHANGELOG.md`), separated by spaces. In a version file, only the old version may be replaced by the new one. A release that touches any other file, or any other line, now fails.
+- New input `tag-prefix` (default `v`). Pass `''` when your tags have no prefix.
+- New output `sha`: the release commit, now at the head of `main`. Check out `needs.release.outputs.sha` instead of the tag in the jobs that build the release.
+- The changelogs must end with a newline, and `[Unreleased]` entries are read from `CHANGELOG.md` at the commit that started the workflow.
+
+Per project:
+
+- Projects that only bump the root `package.json` and `CHANGELOG.md` (such as `streamdeck-plugins`) need no input.
+- A project that rolls a second changelog in a release-it hook (such as `vts-pwa` with `CHANGELOG.fr.md`) passes `changelog-files: CHANGELOG.md CHANGELOG.fr.md`.
+- A project whose bumper also changes another `package.json` (such as `takumi` with `apps/api/package.json`) passes `version-files: package.json apps/api/package.json`. The bumper must keep every other line of that file as it is (same indentation, same final newline).
+- A project whose tags have no prefix (such as `ui-minimalstuff`) passes `tag-prefix: ''`.
+- A Rust project that also bumps `Cargo.toml` and `Cargo.lock` (such as `devslot`) passes `version-files: package.json Cargo.toml Cargo.lock`.
+
 ## Upgrade from 0.7 to 0.8
 
 In 0.x a minor bump is breaking, so `^0.7.0` never resolves to 0.8: upgrade explicitly.

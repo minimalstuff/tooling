@@ -83,9 +83,23 @@ Each finding prints its kind, package, location and how to fix it.
 
 ### Reusable release workflow
 
-`.github/workflows/release.yml` runs the check, then `release-it`, in CI. It runs from `main` only and expects the checks to have passed in the caller. Inputs: `increment` (required: `patch`, `minor` or `major`), `release-script` (default `release`), `pre-release-id` (default none), `check-release-command` (default `pnpm exec tooling check-release`), `node-version-file` (default `.node-version`), `release-environment` (default `release`). Outputs: `version` and `tag`.
+`.github/workflows/release.yml` runs the check, then `release-it`, in CI, and pushes the release with a deploy key. It runs from `main` only and expects the checks to have passed in the caller.
 
-The job runs in the caller's environment `release` and takes the required secret `release-deploy-key`, the private key of a deploy key with write access, which you store as the environment secret `RELEASE_DEPLOY_KEY` and pass by name. The key is only loaded in the last step, which pushes the commit and the tag; dependencies are installed with `--ignore-scripts` and the GitHub release is created afterwards from the `CHANGELOG.md` section of the version (the `[Unreleased]` section for a prerelease without its own section).
+| Input                   | Default                           | Meaning                                                                                                                                                                         |
+| ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `increment`             | required                          | `patch`, `minor`, `major`, or `prerelease` to continue the current prerelease series (`1.0.0-next.0` to `1.0.0-next.1`; it needs a `release-script` that passes `--preRelease`) |
+| `release-script`        | `release`                         | `package.json` script that runs release-it                                                                                                                                      |
+| `pre-release-id`        | none                              | Pre-release identifier, for example `next`                                                                                                                                      |
+| `check-release-command` | `pnpm exec tooling check-release` | Command that fails when the release is unsafe                                                                                                                                   |
+| `node-version-file`     | `.node-version`                   | File that holds the Node version                                                                                                                                                |
+| `release-environment`   | `release`                         | Environment of the caller repository that holds the deploy key                                                                                                                  |
+| `version-files`         | `package.json`                    | Space-separated files the release commit may change to bump the version                                                                                                         |
+| `changelog-files`       | `CHANGELOG.md`                    | Space-separated Keep a Changelog files the release commit may roll                                                                                                              |
+| `tag-prefix`            | `v`                               | Prefix of the tag name, before the version; pass an empty string for tags like `1.2.3`                                                                                          |
+
+Outputs: `version`, `tag` (the tag created) and `sha` (the release commit, now at the head of `main`).
+
+The required secret `release-deploy-key` is the private key of a deploy key with write access: store it as the environment secret `RELEASE_DEPLOY_KEY` and pass it by name.
 
 A consumer `publish.yml` that calls it, pinned by commit SHA:
 
@@ -97,7 +111,7 @@ on:
     inputs:
       increment:
         type: choice
-        options: [patch, minor, major]
+        options: [patch, minor, major, prerelease]
         required: true
 
 permissions:
@@ -111,7 +125,7 @@ jobs:
     needs: checks
     permissions:
       contents: write
-    uses: minimalstuff/tooling/.github/workflows/release.yml@<full commit SHA> # v0.9.0
+    uses: minimalstuff/tooling/.github/workflows/release.yml@<full commit SHA> # v0.12.0
     with:
       increment: ${{ inputs.increment }}
     secrets:
@@ -119,6 +133,23 @@ jobs:
 ```
 
 The caller grants `contents: write`, declares no `environment` on the calling job, and needs the environment `release` with the secret `RELEASE_DEPLOY_KEY`, the deploy key and the tag ruleset described in [Release a version](releasing.md#one-time-setup).
+
+#### Two jobs, and why
+
+release-it and its npm dependencies are third-party code. In a single job, that code could reach the deploy key, the only bypass actor of the tag ruleset: a dependency can append to `$GITHUB_PATH` (a fake `ssh-add` then receives the key on stdin), write `$GITHUB_ENV` (`BASH_ENV`, `LD_PRELOAD`) or plant `.git/hooks` and `.git/config`, then move tags or push to `main`. The workflow therefore has two jobs:
+
+- `prepare` has no environment and no secret, and its token is `contents: read`. It installs with `--ignore-scripts`, runs the check and release-it with `--no-git.push --no-git.tag --no-github.release`, then ships the single release commit as the artifact `tooling-release-bundle` (a `git bundle`, kept 7 days).
+- `publish` runs in the environment that holds the deploy key and uses only bash, git, jq, awk and gh: no Node, no pnpm, no npm. It treats the artifact as hostile. It fetches the one expected ref with object checks, then refuses anything but a version bump and a changelog roll: exactly one parent equal to the workflow commit; only modified regular files (no add, delete, rename, symlink, executable bit or submodule); every changed path listed in `version-files` or `changelog-files`; a strict semantic version, read from the root `package.json`; in version files, only the old version replaced by the new one (and nothing else in a `package.json`); in changelogs, only the `[Unreleased]` heading, the new dated heading and the `[Unreleased]` and version links to your repository. It never checks out the bundle's files, creates the annotated tag itself (`<tag-prefix><version>`, message `<repository name> <version>`), pushes `main` and the tag atomically with the deploy key (never forced), and creates the GitHub release with the `[Unreleased]` notes read from `CHANGELOG.md` at the workflow commit.
+
+What it protects: the git history (a release can only add the one verified commit), the tags (an existing tag is never moved) and the deploy key (no third-party code runs next to it).
+
+What it does not protect: the artifacts your own jobs build from the release commit (an npm package, a Docker image, a binary) still run third-party code, like any build. Keep their credentials out of the jobs that build, as `publish.yml` does with its `npm` environment. A dependency whose version equals the old version could also be bumped to the new one in `Cargo.toml` or `Cargo.lock`, so review lockfile changes of a release commit as usual; a `package.json` is stricter, as only its `version` may change. Changelog files must end with a newline, otherwise the roll is refused.
+
+Release-it must not tag: the workflow passes `--no-git.tag`, and the tag settings of your release-it config (`git.tag`, `git.tagAnnotation`) are ignored. Keep `git.tagName` in step with `tag-prefix`, since the changelog links use it.
+
+#### Re-running a failed release
+
+Re-run the failed `publish` job from the Actions page: the bundle artifact of the same run is reused. Before pushing, the job lists the remote tag. If the tag does not exist, it pushes. If the tag is an annotated tag whose commit is the verified release commit and `main` already points at it, the push is skipped and only the missing GitHub release is created. Any other state (the tag exists on another commit, or `main` moved) fails and needs a manual look. The GitHub release is skipped when it already exists.
 
 ### Apps deployed from tags
 

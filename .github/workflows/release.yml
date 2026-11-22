@@ -3,13 +3,23 @@
 #
 # The caller must grant `contents: write` to the calling job.
 #
-# The deploy key never sits on disk while third-party code runs: dependencies
-# are installed with --ignore-scripts, release-it only commits and tags locally,
-# and the key is loaded in ssh-agent in the last step, which only runs git.
+# Two jobs, so third-party code never runs next to the deploy key:
+#
+#   prepare   Runs release-it and its npm dependencies with a read-only token
+#             and no environment, so no secret. It only commits the release
+#             locally and ships that single commit as a git bundle artifact.
+#   publish   Runs in the environment that holds the deploy key, with bash,
+#             git, jq, awk and gh only: no Node, no pnpm, no npm. It treats the
+#             bundle as hostile: it refuses anything but a version bump and
+#             the changelog roll, creates the tag itself, then pushes.
 #
 # release-it always runs `git fetch`, which needs credentials in a private
-# repository. The job token reaches git through GIT_CONFIG_* variables of that
-# step only, never .git/config; tags still need the deploy key.
+# repository. The job token (contents: read) reaches git through GIT_CONFIG_*
+# variables of that step only, never .git/config.
+#
+# Re-running the failed `publish` job is safe: the bundle artifact is kept for
+# seven days, an existing tag is never moved, and when the tag and `main`
+# already point at the verified commit the push is skipped.
 #
 # Inputs:
 #   increment              Required. patch, minor, major, or prerelease to
@@ -23,6 +33,15 @@
 #   node-version-file      File that holds the Node version. Default: .node-version.
 #   release-environment    Environment of the caller repository that holds the
 #                          deploy key secret. Default: release.
+#   version-files          Space-separated files the release commit may change
+#                          to bump the version. In them, the old version may
+#                          only be replaced by the new one. The root
+#                          package.json is always the source of the version.
+#                          Default: package.json.
+#   changelog-files        Space-separated Keep a Changelog files the release
+#                          commit may roll. Default: CHANGELOG.md.
+#   tag-prefix             Prefix of the tag name, before the version. Default: v.
+#                          Pass an empty string for tags without prefix.
 #
 # Secrets:
 #   release-deploy-key     Required. Private SSH key of a deploy key with write
@@ -35,8 +54,9 @@
 #                          The calling job must not declare an environment.
 #
 # Outputs:
-#   version                Version in package.json after the release.
-#   tag                    Latest tag reachable from HEAD after the release.
+#   version                Version of the release.
+#   tag                    Tag created for the release.
+#   sha                    Release commit, now at the head of main.
 
 name: Release
 
@@ -61,27 +81,39 @@ on:
       release-environment:
         type: string
         default: release
+      version-files:
+        type: string
+        default: package.json
+      changelog-files:
+        type: string
+        default: CHANGELOG.md
+      tag-prefix:
+        type: string
+        default: v
     secrets:
       release-deploy-key:
         required: true
     outputs:
       version:
-        value: ${{ jobs.release.outputs.version }}
+        value: ${{ jobs.publish.outputs.version }}
       tag:
-        value: ${{ jobs.release.outputs.tag }}
+        value: ${{ jobs.publish.outputs.tag }}
+      sha:
+        value: ${{ jobs.publish.outputs.sha }}
 
 permissions:
   contents: read
 
+env:
+  BUNDLE_ARTIFACT_NAME: tooling-release-bundle
+
 jobs:
-  release:
+  prepare:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.release-environment }}
     permissions:
-      contents: write
+      contents: read
     outputs:
       version: ${{ steps.release.outputs.version }}
-      tag: ${{ steps.release.outputs.tag }}
     steps:
       - name: Require the main branch
         env:
@@ -148,7 +180,7 @@ jobs:
           export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $BASIC_AUTH"
           CURRENT_VERSION=$(node -p 'require("./package.json").version')
-          ARGUMENTS=(--ci --no-git.push --no-github.release)
+          ARGUMENTS=(--ci --no-git.push --no-git.tag --no-github.release)
           if [[ "$INCREMENT" == prerelease ]]; then
             if [[ "$CURRENT_VERSION" != *-* ]]; then
               echo "increment prerelease continues a prerelease series, but $CURRENT_VERSION is not a prerelease" >&2
@@ -166,15 +198,322 @@ jobs:
             echo "increment prerelease produced the stable version $NEW_VERSION: the release script must pass --preRelease. Nothing was pushed." >&2
             exit 1
           fi
-          {
-            echo "version=$(node -p 'require("./package.json").version')"
-            echo "tag=$(git describe --tags --abbrev=0)"
-          } >> "$GITHUB_OUTPUT"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Bundle the release commit
+        env:
+          BUNDLE_DIRECTORY: ${{ runner.temp }}/release-bundle
+        run: |
+          set -euo pipefail
+          COMMIT_COUNT=$(git rev-list --count "$GITHUB_SHA..HEAD")
+          if [[ "$COMMIT_COUNT" != 1 ]]; then
+            echo "The release must add exactly one commit on top of $GITHUB_SHA, found $COMMIT_COUNT" >&2
+            exit 1
+          fi
+          git branch release-candidate HEAD
+          mkdir -p "$BUNDLE_DIRECTORY"
+          git bundle create "$BUNDLE_DIRECTORY/release.bundle" "$GITHUB_SHA..release-candidate"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.BUNDLE_ARTIFACT_NAME }}
+          path: ${{ runner.temp }}/release-bundle/release.bundle
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.release-environment }}
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.verify.outputs.version }}
+      tag: ${{ steps.verify.outputs.tag }}
+      sha: ${{ steps.verify.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ env.BUNDLE_ARTIFACT_NAME }}
+          path: ${{ runner.temp }}/release-bundle
+
+      - name: Verify the release bundle
+        id: verify
+        env:
+          BASE_SHA: ${{ github.sha }}
+          BUNDLE_DIRECTORY: ${{ runner.temp }}/release-bundle
+          VERSION_FILES: ${{ inputs.version-files }}
+          CHANGELOG_FILES: ${{ inputs.changelog-files }}
+          TAG_PREFIX: ${{ inputs.tag-prefix }}
+        run: |
+          set -euo pipefail
+
+          SEMVER_PATTERN='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
+          CANDIDATE_BRANCH=refs/heads/release-candidate
+          CANDIDATE_REF=refs/release/candidate
+          WORK_DIRECTORY=$(mktemp -d)
+          trap 'rm -rf "$WORK_DIRECTORY"' EXIT
+          CHANGED_VERSION_FILES=()
+          CHANGED_CHANGELOG_FILES=()
+
+          fail() {
+            local message="$*"
+            echo "::error::Release verification failed: ${message//[$'\r\n']/ }" >&2
+            exit 1
+          }
+
+          is_listed() {
+            local wanted=$1 listed
+            shift
+            for listed in "$@"; do
+              [[ "$listed" == "$wanted" ]] && return 0
+            done
+            return 1
+          }
+
+          find_bundle_file() {
+            local entries
+            shopt -s dotglob nullglob
+            entries=("$BUNDLE_DIRECTORY"/*)
+            shopt -u dotglob nullglob
+            [[ ${#entries[@]} -eq 1 ]] || fail "the artifact must hold exactly one file, found ${#entries[@]}"
+            [[ -f "${entries[0]}" && ! -L "${entries[0]}" ]] || fail "the artifact entry is not a regular file"
+            echo "${entries[0]}"
+          }
+
+          fetch_candidate() {
+            git -c transfer.fsckObjects=true fetch --quiet --no-tags "$1" "$CANDIDATE_BRANCH:$CANDIDATE_REF" \
+              || fail "the bundle has no $CANDIDATE_BRANCH or fails the object checks"
+            [[ "$(git cat-file -t "$CANDIDATE_REF")" == commit ]] || fail "$CANDIDATE_BRANCH is not a commit"
+            git rev-parse --verify "$CANDIDATE_REF^{commit}"
+          }
+
+          require_single_parent() {
+            local fields
+            read -r -a fields <<< "$(git rev-list --parents --max-count=1 "$CANDIDATE")"
+            [[ ${#fields[@]} -eq 2 ]] || fail "the release commit must have exactly one parent"
+            [[ "${fields[1]}" == "$BASE_SHA" ]] || fail "the release commit parent is ${fields[1]}, expected $BASE_SHA"
+          }
+
+          collect_changed_files() {
+            local changes="$WORK_DIRECTORY/changes" meta changed_path old_mode new_mode status
+            git diff-tree -r --raw --no-renames -z "$BASE_SHA" "$CANDIDATE" > "$changes"
+            while IFS= read -r -d '' meta && IFS= read -r -d '' changed_path; do
+              read -r old_mode new_mode _ _ status <<< "${meta#:}"
+              [[ "$status" == M ]] || fail "$changed_path is added, deleted or moved (status $status)"
+              [[ "$old_mode" == 100644 && "$new_mode" == 100644 ]] \
+                || fail "$changed_path changes its file mode ($old_mode to $new_mode)"
+              if is_listed "$changed_path" "${VERSION_FILE_LIST[@]}"; then
+                CHANGED_VERSION_FILES+=("$changed_path")
+              elif is_listed "$changed_path" "${CHANGELOG_FILE_LIST[@]}"; then
+                CHANGED_CHANGELOG_FILES+=("$changed_path")
+              else
+                fail "$changed_path is not listed in version-files or changelog-files"
+              fi
+            done < "$changes"
+            [[ ${#CHANGED_VERSION_FILES[@]} -gt 0 ]] || fail "the release commit changes no version file"
+          }
+
+          read_package_version() {
+            git show "$1:package.json" | jq -r '.version | select(type == "string")'
+          }
+
+          require_semver() {
+            [[ "$2" =~ $SEMVER_PATTERN ]] || fail "the $1 version '$2' is not a semantic version"
+          }
+
+          require_json_only_version_changed() {
+            local before after
+            before=$(git show "$BASE_SHA:$1" | jq -S 'del(.version)')
+            after=$(git show "$CANDIDATE:$1" | jq -S 'del(.version)')
+            [[ "$before" == "$after" ]] || fail "$1 changes more than its version"
+          }
+
+          write_diff() {
+            git diff -U0 --no-renames --no-textconv --no-ext-diff --text "$BASE_SHA" "$CANDIDATE" -- "$1" > "$WORK_DIRECTORY/file_diff"
+          }
+
+          require_version_replacement_only() {
+            write_diff "$1"
+            OLD_VERSION="$OLD_VERSION" NEW_VERSION="$NEW_VERSION" awk '
+              function show(text) {
+                gsub(/\r/, " ", text)
+                print text
+              }
+              function replace_all(text, from, to,    result, position) {
+                result = ""
+                while ((position = index(text, from)) > 0) {
+                  result = result substr(text, 1, position - 1) to
+                  text = substr(text, position + length(from))
+                }
+                return result text
+              }
+              function finish_hunk(    line_number) {
+                if (removed_count != added_count) {
+                  show("a hunk removes " removed_count " lines and adds " added_count)
+                  failed = 1
+                }
+                for (line_number = 1; line_number <= removed_count; line_number++) {
+                  if (replace_all(removed[line_number], old, new) != added[line_number]) {
+                    show("line changed beyond the version: " removed[line_number])
+                    failed = 1
+                  }
+                }
+                removed_count = 0
+                added_count = 0
+              }
+              BEGIN { old = ENVIRON["OLD_VERSION"]; new = ENVIRON["NEW_VERSION"]; failed = 0 }
+              /^@@ / { if (in_hunk) finish_hunk(); in_hunk = 1; hunks++; next }
+              !in_hunk { next }
+              /^-/ { removed[++removed_count] = substr($0, 2); next }
+              /^\+/ { added[++added_count] = substr($0, 2); next }
+              /^\\/ { next }
+              { show("unexpected diff line: " $0); failed = 1 }
+              END {
+                if (in_hunk) finish_hunk()
+                if (hunks == 0) { show("no change found"); failed = 1 }
+                exit failed
+              }
+            ' "$WORK_DIRECTORY/file_diff" || fail "$1 changes more than replacing $OLD_VERSION by $NEW_VERSION"
+          }
+
+          require_changelog_roll_only() {
+            write_diff "$1"
+            NEW_VERSION="$NEW_VERSION" awk '
+              function show(text) {
+                gsub(/\r/, " ", text)
+                print text
+              }
+              function is_safe_link(url, allows_release_tag,    rest, tail) {
+                if (index(tolower(url), prefix) != 1) return 0
+                rest = substr(url, length(prefix) + 1)
+                if (index(rest, "compare/") == 1) tail = substr(rest, 9)
+                else if (allows_release_tag && index(rest, "releases/tag/") == 1) tail = substr(rest, 14)
+                else return 0
+                return tail ~ "^[A-Za-z0-9._/~^+-]+$"
+              }
+              function is_release_heading(line, opening,    date) {
+                if (index(line, opening) != 1) return 0
+                date = substr(line, length(opening) + 1)
+                return date ~ "^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$"
+              }
+              function is_allowed_addition(line) {
+                if (line == "" || line == "## [Unreleased]" || line == "## Unreleased") return 1
+                if (is_release_heading(line, "## [" new "] - ")) return 1
+                if (is_release_heading(line, "## " new " - ")) return 1
+                if (index(tolower(line), "[unreleased]: ") == 1) return is_safe_link(substr(line, 15), 0)
+                if (index(line, "[" new "]: ") == 1) return is_safe_link(substr(line, length(new) + 5), 1)
+                return 0
+              }
+              BEGIN {
+                new = ENVIRON["NEW_VERSION"]
+                prefix = tolower("https://github.com/" ENVIRON["GITHUB_REPOSITORY"] "/")
+                failed = 0
+              }
+              /^@@ / { in_hunk = 1; hunks++; next }
+              !in_hunk { next }
+              /^\\/ { next }
+              /^-/ {
+                line = substr($0, 2)
+                sub(/\r$/, "", line)
+                if (index(tolower(line), "[unreleased]: ") != 1) {
+                  show("removed line: " line)
+                  failed = 1
+                }
+                next
+              }
+              /^\+/ {
+                line = substr($0, 2)
+                sub(/\r$/, "", line)
+                if (!is_allowed_addition(line)) {
+                  show("added line: " line)
+                  failed = 1
+                }
+                next
+              }
+              { show("unexpected diff line: " $0); failed = 1 }
+              END {
+                if (hunks == 0) { show("no change found"); failed = 1 }
+                exit failed
+              }
+            ' "$WORK_DIRECTORY/file_diff" || fail "$1 changes more than rolling [Unreleased] into $NEW_VERSION"
+          }
+
+          write_outputs() {
+            {
+              echo "version=$NEW_VERSION"
+              echo "tag=$TAG"
+              echo "sha=$CANDIDATE"
+            } >> "$GITHUB_OUTPUT"
+          }
+
+          read -r -a VERSION_FILE_LIST <<< "$VERSION_FILES"
+          read -r -a CHANGELOG_FILE_LIST <<< "$CHANGELOG_FILES"
+
+          BUNDLE_FILE=$(find_bundle_file)
+          CANDIDATE=$(fetch_candidate "$BUNDLE_FILE")
+          require_single_parent
+          collect_changed_files
+
+          OLD_VERSION=$(read_package_version "$BASE_SHA")
+          NEW_VERSION=$(read_package_version "$CANDIDATE")
+          require_semver current "$OLD_VERSION"
+          require_semver new "$NEW_VERSION"
+          [[ "$OLD_VERSION" != "$NEW_VERSION" ]] || fail "the version did not change"
+          git show "$CANDIDATE:package.json" | jq -e --arg version "$NEW_VERSION" '.version == $version' > /dev/null \
+            || fail "package.json version does not match $NEW_VERSION"
+
+          TAG="$TAG_PREFIX$NEW_VERSION"
+          git check-ref-format "refs/tags/$TAG" || fail "'$TAG' is not a valid tag name"
+
+          for file in "${CHANGED_VERSION_FILES[@]}"; do
+            if [[ "$file" == package.json || "$file" == */package.json ]]; then
+              require_json_only_version_changed "$file"
+            fi
+            require_version_replacement_only "$file"
+          done
+          for file in ${CHANGED_CHANGELOG_FILES[@]+"${CHANGED_CHANGELOG_FILES[@]}"}; do
+            require_changelog_roll_only "$file"
+          done
+
+          write_outputs
+
+      - name: Tag the verified commit
+        env:
+          VERSION: ${{ steps.verify.outputs.version }}
+          TAG: ${{ steps.verify.outputs.tag }}
+          SHA: ${{ steps.verify.outputs.sha }}
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898298+github-actions[bot]@users.noreply.github.com
+        run: |
+          set -euo pipefail
+          git tag --annotate --message "${GITHUB_REPOSITORY#*/} $VERSION" "$TAG" "$SHA"
+
+      - name: Read the release notes
+        run: |
+          set -euo pipefail
+          NOTES_FILE="$RUNNER_TEMP/release_notes.md"
+          awk -v heading="## [Unreleased]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found { print }
+          ' CHANGELOG.md > "$NOTES_FILE"
+          if [[ -z "$(tr -d '[:space:]' < "$NOTES_FILE")" ]]; then
+            echo "No [Unreleased] entries found in CHANGELOG.md" >&2
+            exit 1
+          fi
 
       - name: Push commit and tag
         env:
           DEPLOY_KEY: ${{ secrets.release-deploy-key }}
-          TAG: ${{ steps.release.outputs.tag }}
+          TAG: ${{ steps.verify.outputs.tag }}
+          SHA: ${{ steps.verify.outputs.sha }}
           GITHUB_HOST_KEY: github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
         run: |
           set -euo pipefail
@@ -184,33 +523,34 @@ jobs:
           KNOWN_HOSTS="$RUNNER_TEMP/known_hosts"
           printf '%s\n' "$GITHUB_HOST_KEY" > "$KNOWN_HOSTS"
           export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$KNOWN_HOSTS"
-          git push --atomic "git@github.com:$GITHUB_REPOSITORY.git" HEAD:refs/heads/main "refs/tags/$TAG"
+          REMOTE="git@github.com:$GITHUB_REPOSITORY.git"
+          REMOTE_REFS=$(git ls-remote "$REMOTE" refs/heads/main "refs/tags/$TAG" "refs/tags/$TAG^{}")
+          read_remote_ref() {
+            awk -v ref="$1" '$2 == ref { print $1 }' <<< "$REMOTE_REFS"
+          }
+          if [[ -n "$(read_remote_ref "refs/tags/$TAG")" ]]; then
+            if [[ "$(read_remote_ref "refs/tags/$TAG^{}")" == "$SHA" && "$(read_remote_ref refs/heads/main)" == "$SHA" ]]; then
+              echo "Tag $TAG and main already point at $SHA, nothing to push"
+              exit 0
+            fi
+            echo "Tag $TAG already exists on the remote and does not match the verified release commit $SHA" >&2
+            exit 1
+          fi
+          git push --atomic "$REMOTE" "$SHA:refs/heads/main" "refs/tags/$TAG"
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.release.outputs.tag }}
-          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.verify.outputs.tag }}
+          VERSION: ${{ steps.verify.outputs.version }}
         run: |
           set -euo pipefail
-          NOTES_FILE="$RUNNER_TEMP/release_notes.md"
-          extract_section() {
-            awk -v heading="## [$1]" '
-              index($0, heading) == 1 { found = 1; next }
-              found && index($0, "## [") == 1 { exit }
-              found { print }
-            ' CHANGELOG.md
-          }
-          extract_section "$VERSION" > "$NOTES_FILE"
-          if [[ "$VERSION" == *-* && -z "$(tr -d '[:space:]' < "$NOTES_FILE")" ]]; then
-            extract_section Unreleased > "$NOTES_FILE"
-          fi
-          if [[ -z "$(tr -d '[:space:]' < "$NOTES_FILE")" ]]; then
-            echo "No CHANGELOG.md entries found for $VERSION" >&2
-            exit 1
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "GitHub release $TAG already exists, nothing to create"
+            exit 0
           fi
           FLAGS=(--verify-tag)
           if [[ "$VERSION" == *-* ]]; then
             FLAGS+=(--prerelease)
           fi
-          gh release create "$TAG" --title "$TAG" --notes-file "$NOTES_FILE" "${FLAGS[@]}"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes-file "$RUNNER_TEMP/release_notes.md" "${FLAGS[@]}"

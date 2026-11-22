@@ -106,7 +106,6 @@
 			"requireCleanWorkingDir": true,
 			"requireUpstream": true,
 			"commitMessage": "chore(release): ${version}",
-			"tagAnnotation": "v${version}",
 			"push": true,
 			"tagName": "v${version}",
 			"tagExclude": "*.*.*-*"
