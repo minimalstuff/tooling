@@ -4,6 +4,8 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-22
+
 ### Added
 
 - The reusable release workflow takes a `draft` input (default `false`): it creates the GitHub release as a draft, so a caller can attach assets and then publish it, which GitHub immutable releases require.
@@ -170,7 +172,7 @@ No user-visible changes.
 
 - The framework preset targets React instead of Vue.
 
-[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.13.0...HEAD
 [0.7.0]: https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0
@@ -183,6 +185,7 @@ No user-visible changes.
 [0.1.1]: https://github.com/minimalstuff/tooling/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/minimalstuff/tooling/releases/tag/v0.1.0
 
+[0.13.0]: https://github.com/minimalstuff/tooling/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/minimalstuff/tooling/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/minimalstuff/tooling/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/minimalstuff/tooling/compare/v0.9.1...v0.10.0
