@@ -4,6 +4,10 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+### Added
+
+- The reusable release workflow takes a `draft` input (default `false`): it creates the GitHub release as a draft, so a caller can attach assets and then publish it, which GitHub immutable releases require.
+
 ## [0.12.0] - 2026-11-22
 
 ### Security

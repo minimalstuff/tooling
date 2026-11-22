@@ -97,6 +97,7 @@ Each finding prints its kind, package, location and how to fix it.
 | `changelog-files`       | `CHANGELOG.md`                    | Space-separated Keep a Changelog files the release commit may roll                                                                                                                                      |
 | `tag-prefix`            | `v`                               | Prefix of the tag name, before the version; pass an empty string for tags like `1.2.3`                                                                                                                  |
 | `commit-message`        | `chore(release): ${version}`      | Message of the release commit, with `${version}` replaced by the new version (nothing is evaluated); set it to the `commitMessage` of your release-it config. It must render to a single printable line |
+| `draft`                 | `false`                           | Create the GitHub release as a draft, so the caller can attach assets before publishing it (see below)                                                                                                  |
 
 Outputs: `version`, `tag` (the tag created) and `sha` (the release commit, now at the head of `main`).
 
@@ -126,7 +127,7 @@ jobs:
     needs: checks
     permissions:
       contents: write
-    uses: minimalstuff/tooling/.github/workflows/release.yml@<full commit SHA> # v0.12.0
+    uses: minimalstuff/tooling/.github/workflows/release.yml@<full commit SHA> # v0.13.0
     with:
       increment: ${{ inputs.increment }}
     secrets:
@@ -134,6 +135,40 @@ jobs:
 ```
 
 The caller grants `contents: write`, declares no `environment` on the calling job, and needs the environment `release` with the secret `RELEASE_DEPLOY_KEY`, the deploy key and the tag ruleset described in [Release a version](releasing.md#one-time-setup).
+
+#### Draft releases and immutable releases
+
+GitHub immutable releases forbid adding assets to a published release. To attach binaries and still lock them, pass `draft: true`: the workflow creates the release as a draft, a caller job uploads the assets, then publishes the release. Publication is when the assets and the tag become immutable.
+
+```yaml
+jobs:
+  release:
+    needs: checks
+    permissions:
+      contents: write
+    uses: minimalstuff/tooling/.github/workflows/release.yml@<full commit SHA> # v0.13.0
+    with:
+      increment: ${{ inputs.increment }}
+      draft: true
+    secrets:
+      release-deploy-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+
+  attach:
+    needs: release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload the assets and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY"
+          gh release edit "$TAG" --draft=false --repo "$GITHUB_REPOSITORY"
+```
+
+While the release is a draft, a failed upload can be re-run with `gh release upload --clobber`. Once it is published with immutable releases on, the assets can no longer change: a mistake needs a new release.
 
 #### Two jobs, and why
 
