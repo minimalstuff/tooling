@@ -16,6 +16,7 @@ import {
 	type ReleaseScenario,
 	type ScenarioOptions,
 } from '#release_workflow/release_scenario.ts';
+import { runGit } from '#release_workflow/run_git.ts';
 
 const PRERELEASE_BASE_VERSION = '1.0.0-next.0';
 const PRERELEASE_NEW_VERSION = '1.0.0-next.1';
@@ -53,8 +54,16 @@ describe('release bundle verification (legitimate releases)', () => {
 		expect(outputs).toEqual({
 			version: NEW_VERSION,
 			tag: `v${NEW_VERSION}`,
-			sha: candidateSha,
+			sha: expect.stringMatching(/^[0-9a-f]{40}$/),
 		});
+		expect(
+			runGit(scenario.publishDirectory, [
+				'rev-parse',
+				`${outputs['sha']}^{tree}`,
+			])
+		).toBe(
+			runGit(scenario.publishDirectory, ['rev-parse', `${candidateSha}^{tree}`])
+		);
 	});
 
 	it('should accept a release when the workflow checkout is shallow', () => {
@@ -101,7 +110,7 @@ describe('release bundle verification (legitimate releases)', () => {
 			],
 		});
 
-		const { exitCode, outputs } = scenario.verify();
+		const { exitCode, outputs } = scenario.verify({ increment: 'prerelease' });
 
 		expect(exitCode).toBe(0);
 		expect(outputs['tag']).toBe(`v${PRERELEASE_NEW_VERSION}`);

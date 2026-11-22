@@ -17,6 +17,7 @@ import {
 	createReleaseScenario,
 	type ReleaseScenario,
 } from '#release_workflow/release_scenario.ts';
+import { runGit } from '#release_workflow/run_git.ts';
 
 const CARGO_VERSION_FILES = 'package.json Cargo.toml Cargo.lock';
 
@@ -85,7 +86,14 @@ describe('release bundle verification (attacks)', () => {
 		const { exitCode, outputs } = scenario.verify();
 
 		expect(exitCode).toBe(0);
-		expect(outputs['sha']).toBe(candidateSha);
+		expect(
+			runGit(scenario.publishDirectory, [
+				'rev-parse',
+				`${outputs['sha']}^{tree}`,
+			])
+		).toBe(
+			runGit(scenario.publishDirectory, ['rev-parse', `${candidateSha}^{tree}`])
+		);
 	});
 
 	it('should refuse a bundle that has no release candidate ref', () => {
