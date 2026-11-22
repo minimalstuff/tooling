@@ -4,6 +4,8 @@ All notable changes to @minimalstuff/tooling are written here for the people who
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-22
+
 ### Security
 
 - **Breaking:** the reusable release workflow runs release-it and its npm dependencies in a `prepare` job with no environment, no secret and a read-only token, so third-party code never runs next to the deploy key. The `publish` job, in the release environment, uses only bash, git, jq, awk and gh: it verifies the release commit shipped as a git bundle (one commit on top of the workflow commit, only a version bump and a changelog roll), creates the tag itself, and pushes with the deploy key. See [Upgrade from 0.11 to 0.12](docs/migrating.md#upgrade-from-011-to-012).
@@ -164,7 +166,7 @@ No user-visible changes.
 
 - The framework preset targets React instead of Vue.
 
-[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/minimalstuff/tooling/compare/v0.12.0...HEAD
 [0.7.0]: https://github.com/minimalstuff/tooling/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/minimalstuff/tooling/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/minimalstuff/tooling/compare/v0.4.0...v0.5.0
@@ -177,6 +179,7 @@ No user-visible changes.
 [0.1.1]: https://github.com/minimalstuff/tooling/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/minimalstuff/tooling/releases/tag/v0.1.0
 
+[0.12.0]: https://github.com/minimalstuff/tooling/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/minimalstuff/tooling/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/minimalstuff/tooling/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/minimalstuff/tooling/compare/v0.9.0...v0.9.1
